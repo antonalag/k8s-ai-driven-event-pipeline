@@ -3,6 +3,7 @@ package com.platform.analyzer.infrastructure;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.model.AiAnalysis;
+import com.platform.analyzer.model.AiAnalysisEvent;
 import com.platform.analyzer.model.KubernetesEvent;
 import com.platform.analyzer.model.PodPhase;
 import com.platform.analyzer.service.OllamaAnalyzerService;
@@ -12,17 +13,21 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Kafka consumer that listens to the {@code k8s-pod-events} topic and drives
- * the AI analysis pipeline for each received {@link KubernetesEvent}.
+ * Kafka consumer that drives the full intelligence pipeline for each received
+ * {@link KubernetesEvent}:
  *
- * <h2>Routing logic</h2>
- * <p>Only events whose Pod status indicates a non-healthy state
- * ({@code Pending}, {@code Failed}, {@code Unknown}) are forwarded to the
- * {@link OllamaAnalyzerService}. {@code Running} and {@code Succeeded} events
- * are logged at DEBUG level and skipped — they carry no actionable signal.
+ * <ol>
+ *   <li>Receives a Pod event from the {@code k8s-pod-events} topic.</li>
+ *   <li>Routes only non-healthy events (Failed / Pending / Unknown) to the AI analyzer.</li>
+ *   <li>Forwards the structured {@link AiAnalysis} to {@link AiAnalysisProducer} for
+ *       publication to the {@code ai-analysis-events} topic.</li>
+ * </ol>
  *
- * <p>This keeps Ollama calls focused on events that actually warrant diagnosis
- * and avoids unnecessary load on the local LLM for healthy pods.
+ * <p>This makes {@code ai-analyzer} a hybrid Consumer+Producer service:
+ * <ul>
+ *   <li><strong>Consumes</strong> from {@code k8s-pod-events}</li>
+ *   <li><strong>Produces</strong> to {@code ai-analysis-events}</li>
+ * </ul>
  */
 @Component
 public class PodEventConsumer {
@@ -30,25 +35,32 @@ public class PodEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(PodEventConsumer.class);
 
     private final OllamaAnalyzerService analyzerService;
+    private final AiAnalysisProducer analysisProducer;
     private final ObjectMapper objectMapper;
 
     /**
      * Constructor injection — preferred over field injection per project standards.
      *
-     * @param analyzerService the Ollama-backed AI analysis service
-     * @param objectMapper    shared Jackson mapper for pretty-printing the diagnosis log
+     * @param analyzerService  the Ollama-backed AI analysis service
+     * @param analysisProducer the Kafka producer for {@code ai-analysis-events}
+     * @param objectMapper     shared Jackson mapper for pretty-printing the diagnosis log
      */
-    public PodEventConsumer(OllamaAnalyzerService analyzerService, ObjectMapper objectMapper) {
+    public PodEventConsumer(
+            OllamaAnalyzerService analyzerService,
+            AiAnalysisProducer analysisProducer,
+            ObjectMapper objectMapper) {
         this.analyzerService = analyzerService;
+        this.analysisProducer = analysisProducer;
         this.objectMapper = objectMapper;
     }
 
     /**
-     * Receives a {@link KubernetesEvent} from the {@code k8s-pod-events} topic.
+     * Receives a {@link KubernetesEvent} from the {@code k8s-pod-events} topic and
+     * drives the full analysis pipeline.
      *
-     * <p>Events with a non-healthy status are forwarded to the AI analyzer.
-     * The resulting {@link AiAnalysis} is logged as a pretty-printed JSON object
-     * so the structured diagnosis is immediately visible in the service logs.
+     * <p>Healthy pods (Running, Succeeded) are skipped to avoid unnecessary LLM load.
+     * For non-healthy pods, the AI diagnosis is obtained, logged, and published to
+     * {@code ai-analysis-events}.
      *
      * @param event the deserialized Kubernetes Pod event
      */
@@ -72,6 +84,11 @@ public class PodEventConsumer {
             AiAnalysis analysis = analyzerService.analyse(event);
             log.info("[DIAGNOSIS] AI analysis for pod '{}':\n{}",
                     event.podName(), prettyPrint(analysis));
+
+            // Build the outbound event and publish it to ai-analysis-events
+            AiAnalysisEvent outboundEvent = AiAnalysisEvent.from(analysis, event);
+            analysisProducer.publish(outboundEvent);
+
         } catch (OllamaAnalyzerService.OllamaAnalysisException e) {
             log.error("[ERROR] AI analysis failed for pod '{}': {}", event.podName(), e.getMessage(), e);
         }

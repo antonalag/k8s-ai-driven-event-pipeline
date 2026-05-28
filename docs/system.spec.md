@@ -26,4 +26,5 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 
 ### 🚧 Phase 3 — Intelligence Layer (Current)
 - [x] **Milestone 6:** Design the AI analysis contract schema at `specs/schemas/ai-analysis.v1.json`.
-- [x] **Milestone 7 (In Progress):** Initialize the `services/ai-analyzer` microservice skeleton (Spring Boot 3.5.x, Java 21, reactive Kafka consumer backbone). Ollama-backed structured AI analyzer pending.
+- [x] **Milestone 7 (Completed):** Initialize the `services/ai-analyzer` microservice (Spring Boot 3.5.x, Java 21, Gradle multi-project module). Implemented reactive Kafka consumer backbone (`PodEventConsumer`) with selective routing (Failed/Pending/Unknown only), Ollama `RestClient` integration (`OllamaAnalyzerService`), structured SRE system prompt with embedded JSON Schema contract, and defensive markdown-fence stripping for reliable `AiAnalysis` parsing.
+- [ ] **Milestone 8 (In Progress):** Evolve `services/ai-analyzer` into a hybrid Consumer+Producer service. After a successful Ollama diagnosis, publish the structured `AiAnalysis` result to the `ai-analysis-events` Kafka topic using a `KafkaTemplate`-backed `AiAnalysisProducer`. The `ai-analyzer` service thus acts as both a consumer of `k8s-pod-events` and a producer of `ai-analysis-events`, closing the intelligence pipeline loop.
