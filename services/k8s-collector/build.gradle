@@ -24,8 +24,13 @@ dependencies {
     // Kubernetes Java client — Informer API for watching Pod state changes
     implementation 'io.kubernetes:client-java:22.0.0'
 
+    // Spring Kafka — KafkaTemplate producer for publishing KubernetesEvent records
+    // Version managed by Spring Boot BOM (3.5.14 → spring-kafka 3.3.x)
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 tasks.named('test') {

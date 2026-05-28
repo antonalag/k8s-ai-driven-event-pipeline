@@ -21,8 +21,8 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 - [x] **Milestone 3:** Implement the Kubernetes Informer to watch and stream Pod state updates.
 
 ### 🚧 Phase 2 — Streaming Layer (Current)
-- [ ] **Milestone 4:** Setup local Kafka infrastructure using Docker Compose (KRaft mode, single broker, topic `k8s-pod-events` with 3 partitions) at `deployments/docker-compose/`.
-- [ ] **Milestone 5:** Integrate a Kafka Producer in `services/k8s-collector` to publish `KubernetesEvent` records to the `k8s-pod-events` topic.
+- [x] **Milestone 4:** Setup local Kafka infrastructure using Docker Compose (KRaft mode, single broker, topic `k8s-pod-events` with 3 partitions) at `deployments/docker-compose/`.
+- [x] **Milestone 5:** Integrate a Kafka Producer in `services/k8s-collector` to publish `KubernetesEvent` records to the `k8s-pod-events` topic.
 
 ### ⏳ Phase 3 — Intelligence Layer (Pending)
 - [ ] **Milestone 6:** Design the AI analysis contract schema at `specs/schemas/ai-analysis.v1.json`.

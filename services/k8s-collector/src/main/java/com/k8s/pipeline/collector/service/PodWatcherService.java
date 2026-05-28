@@ -15,14 +15,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Spring service that watches Kubernetes Pod state changes using the official
- * Kubernetes Java client Informer API.
+ * Kubernetes Java client Informer API and publishes each event to Kafka.
  *
  * <p>Lifecycle:
  * <ol>
@@ -31,18 +34,33 @@ import java.time.Instant;
  *   <li>Shuts down cleanly via {@link #shutdown()} annotated with {@link PreDestroy}.</li>
  * </ol>
  *
- * <p>Each Pod add/update event is mapped to a {@link KubernetesEvent} record and
- * logged via SLF4J. Delete events are logged at DEBUG level for traceability.
+ * <p>Each Pod add/update event is mapped to a {@link KubernetesEvent} record,
+ * logged via SLF4J, and published to the {@value #TOPIC} Kafka topic.
+ * The message key is {@code "<namespace>/<podName>"} to guarantee ordering
+ * per Pod (same key → same partition).
  */
 @Service
 public class PodWatcherService {
 
     private static final Logger log = LoggerFactory.getLogger(PodWatcherService.class);
 
+    /** Kafka topic defined in the contract (Milestone 4). */
+    static final String TOPIC = "k8s-pod-events";
+
     /** Resync period for the SharedIndexInformer (0 = no periodic resync). */
     private static final long RESYNC_PERIOD_MS = 0L;
 
+    private final KafkaTemplate<String, KubernetesEvent> kafkaTemplate;
+
     private SharedInformerFactory informerFactory;
+
+    /**
+     * Constructor injection — mandatory dependency on {@link KafkaTemplate}.
+     * Spring Boot auto-configures the template from {@code application.properties}.
+     */
+    public PodWatcherService(KafkaTemplate<String, KubernetesEvent> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     // ──────────────────────────────────────────────────────────────────────────
     // Lifecycle
@@ -90,10 +108,8 @@ public class PodWatcherService {
 
             @Override
             public void onDelete(V1Pod pod, boolean deletedFinalStateUnknown) {
-                String name = podName(pod);
-                String ns   = namespace(pod);
                 log.debug("Pod DELETED — name={}, namespace={}, finalStateUnknown={}",
-                        name, ns, deletedFinalStateUnknown);
+                        podName(pod), namespace(pod), deletedFinalStateUnknown);
             }
         });
 
@@ -118,7 +134,11 @@ public class PodWatcherService {
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Maps a {@link V1Pod} to a {@link KubernetesEvent} and logs it.
+     * Maps a {@link V1Pod} to a {@link KubernetesEvent}, logs it, and publishes
+     * it to the {@value #TOPIC} Kafka topic.
+     *
+     * <p>The message key is {@code "<namespace>/<podName>"} — this ensures all
+     * events for the same Pod land on the same partition, preserving order.
      *
      * @param eventType human-readable label ("ADDED" or "UPDATED")
      * @param pod       the Pod object received from the informer
@@ -126,16 +146,39 @@ public class PodWatcherService {
     private void handlePodEvent(String eventType, V1Pod pod) {
         try {
             KubernetesEvent event = toKubernetesEvent(pod);
+            String messageKey = event.namespace() + "/" + event.podName();
+
             log.info("[{}] pod={}, namespace={}, status={}, timestamp={}",
                     eventType,
                     event.podName(),
                     event.namespace(),
                     event.status(),
                     event.timestamp());
+
+            CompletableFuture<SendResult<String, KubernetesEvent>> future =
+                    kafkaTemplate.send(TOPIC, messageKey, event);
+
+            future.whenComplete((result, ex) -> {
+                if (ex != null) {
+                    log.error("Failed to publish event for pod={} to topic={}: {}",
+                            event.podName(), TOPIC, ex.getMessage(), ex);
+                } else {
+                    log.debug("Published event for pod={} to topic={} partition={} offset={}",
+                            event.podName(),
+                            TOPIC,
+                            result.getRecordMetadata().partition(),
+                            result.getRecordMetadata().offset());
+                }
+            });
+
         } catch (Exception e) {
-            log.warn("Could not map Pod to KubernetesEvent [{}]: {}", eventType, e.getMessage());
+            log.warn("Could not process Pod event [{}]: {}", eventType, e.getMessage());
         }
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Mapping
+    // ──────────────────────────────────────────────────────────────────────────
 
     /**
      * Converts a {@link V1Pod} into a {@link KubernetesEvent} record.
@@ -147,11 +190,11 @@ public class PodWatcherService {
      * @return a fully populated, immutable {@link KubernetesEvent}
      */
     private KubernetesEvent toKubernetesEvent(V1Pod pod) {
-        String name      = podName(pod);
-        String ns        = namespace(pod);
-        String phaseStr  = (pod.getStatus() != null) ? pod.getStatus().getPhase() : null;
-        PodPhase phase   = parsePodPhase(phaseStr);
-        Instant ts       = Instant.now();
+        String name     = podName(pod);
+        String ns       = namespace(pod);
+        String phaseStr = (pod.getStatus() != null) ? pod.getStatus().getPhase() : null;
+        PodPhase phase  = parsePodPhase(phaseStr);
+        Instant ts      = Instant.now();
 
         return new KubernetesEvent(name, ns, phase, ts);
     }
