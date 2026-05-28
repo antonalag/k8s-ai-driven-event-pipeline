@@ -15,5 +15,5 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 
 ## 4. Roadmap Status
 - [x] **Milestone 1:** Design the event contract schema at `specs/schemas/k8s-event.v1.json`.
-- [ ] **Milestone 2:** Initialize the `services/k8s-collector` microservice using Java 21 & Spring Boot 3.x.
+- [x] **Milestone 2:** Initialize the `services/k8s-collector` microservice using Java 21 & Spring Boot 3.x.
 - [ ] **Milestone 3:** Implement the Kubernetes Informer to watch and stream Pod state updates.

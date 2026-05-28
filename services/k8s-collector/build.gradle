@@ -21,6 +21,9 @@ dependencies {
     // Spring Web (REST layer — required for health/readiness endpoints)
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Kubernetes Java client — Informer API for watching Pod state changes
+    implementation 'io.kubernetes:client-java:22.0.0'
+
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
