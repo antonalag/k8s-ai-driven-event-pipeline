@@ -21,6 +21,10 @@ dependencies {
     // Spring Boot web — required for RestClient (Ollama HTTP calls) and @ConfigurationProperties
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Spring Data OpenSearch — Spring Data compatible integration with OpenSearch 2.x
+    // 1.8.x is the latest 1.x line, compatible with Spring Boot 3.5.x / Spring Data 2025.0
+    implementation 'org.opensearch.client:spring-data-opensearch-starter:1.8.1'
+
     // Spring Kafka — KafkaListener consumer for receiving KubernetesEvent records
     // Version managed by Spring Boot BOM (3.5.14 → spring-kafka 3.3.x)
     implementation 'org.springframework.kafka:spring-kafka'
