@@ -26,4 +26,4 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 
 ### 🚧 Phase 3 — Intelligence Layer (Current)
 - [x] **Milestone 6:** Design the AI analysis contract schema at `specs/schemas/ai-analysis.v1.json`.
-- [ ] **Milestone 7:** Initialize the `services/ai-analyzer` microservice and implement the Ollama-backed structured AI analyzer.
+- [x] **Milestone 7 (In Progress):** Initialize the `services/ai-analyzer` microservice skeleton (Spring Boot 3.5.x, Java 21, reactive Kafka consumer backbone). Ollama-backed structured AI analyzer pending.

@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.14'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group   = 'com.platform'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot base (no web layer needed — this is a pure event-driven service)
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    // Spring Kafka — KafkaListener consumer for receiving KubernetesEvent records
+    // Version managed by Spring Boot BOM (3.5.14 → spring-kafka 3.3.x)
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Jackson Databind — required by JsonDeserializer to reconstruct KubernetesEvent records
+    // spring-boot-starter does not pull the web stack, so jackson must be declared explicitly
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

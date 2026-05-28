@@ -1,0 +1,6 @@
+// Root build file — shared configuration for all subprojects
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+}
