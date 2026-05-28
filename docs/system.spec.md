@@ -14,6 +14,6 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 2. **Structured AI:** The AI agent is strictly forbidden from returning free-text responses; its outputs must be validated against a predefined schema.
 
 ## 4. Roadmap Status
-- [ ] **Milestone 1:** Design the event contract schema at `specs/schemas/k8s-event.v1.json`.
+- [x] **Milestone 1:** Design the event contract schema at `specs/schemas/k8s-event.v1.json`.
 - [ ] **Milestone 2:** Initialize the `services/k8s-collector` microservice using Java 21 & Spring Boot 3.x.
 - [ ] **Milestone 3:** Implement the Kubernetes Informer to watch and stream Pod state updates.

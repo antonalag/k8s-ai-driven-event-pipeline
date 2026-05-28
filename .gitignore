@@ -1,1 +1,53 @@
+# Kiro
 .kiro/
+
+# ──────────────────────────────────────────
+# Gradle
+# ──────────────────────────────────────────
+.gradle/
+**/build/
+**/out/
+
+# Gradle wrapper jar is intentionally tracked; ignore everything else
+!**/gradle/wrapper/gradle-wrapper.jar
+!**/gradlew
+!**/gradlew.bat
+
+# ──────────────────────────────────────────
+# Java compiled output
+# ──────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# ──────────────────────────────────────────
+# IDE — IntelliJ IDEA
+# ──────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE — VS Code
+.vscode/
+
+# IDE — Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# ──────────────────────────────────────────
+# OS noise
+# ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ──────────────────────────────────────────
+# Logs & temp files
+# ──────────────────────────────────────────
+*.log
+*.tmp
+*.swp
