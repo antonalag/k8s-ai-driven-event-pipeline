@@ -18,8 +18,8 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot base (no web layer needed — this is a pure event-driven service)
-    implementation 'org.springframework.boot:spring-boot-starter'
+    // Spring Boot web — required for RestClient (Ollama HTTP calls) and @ConfigurationProperties
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
     // Spring Kafka — KafkaListener consumer for receiving KubernetesEvent records
     // Version managed by Spring Boot BOM (3.5.14 → spring-kafka 3.3.x)
