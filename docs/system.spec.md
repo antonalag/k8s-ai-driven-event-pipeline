@@ -20,10 +20,10 @@ The system will be built incrementally across 3 isolated, contract-backed layers
 - [x] **Milestone 2:** Initialize the `services/k8s-collector` microservice using Java 21 & Spring Boot 3.x.
 - [x] **Milestone 3:** Implement the Kubernetes Informer to watch and stream Pod state updates.
 
-### 🚧 Phase 2 — Streaming Layer (Current)
+### ✅ Phase 2 — Streaming Layer (Completed)
 - [x] **Milestone 4:** Setup local Kafka infrastructure using Docker Compose (KRaft mode, single broker, topic `k8s-pod-events` with 3 partitions) at `deployments/docker-compose/`.
 - [x] **Milestone 5:** Integrate a Kafka Producer in `services/k8s-collector` to publish `KubernetesEvent` records to the `k8s-pod-events` topic.
 
-### ⏳ Phase 3 — Intelligence Layer (Pending)
-- [ ] **Milestone 6:** Design the AI analysis contract schema at `specs/schemas/ai-analysis.v1.json`.
+### 🚧 Phase 3 — Intelligence Layer (Current)
+- [x] **Milestone 6:** Design the AI analysis contract schema at `specs/schemas/ai-analysis.v1.json`.
 - [ ] **Milestone 7:** Initialize the `services/ai-analyzer` microservice and implement the Ollama-backed structured AI analyzer.

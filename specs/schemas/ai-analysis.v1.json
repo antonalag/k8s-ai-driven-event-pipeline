@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://k8s-ai-driven-event-pipeline/specs/schemas/ai-analysis.v1.json",
+  "title": "AiAnalysis",
+  "description": "Structured output contract for the AI Analyzer (Ollama). The AI agent is strictly forbidden from returning free-text; every response MUST validate against this schema.",
+  "type": "object",
+  "properties": {
+    "podName": {
+      "type": "string",
+      "description": "The name of the Kubernetes Pod that was analysed. Must match the podName from the originating KubernetesEvent.",
+      "minLength": 1
+    },
+    "namespace": {
+      "type": "string",
+      "description": "The Kubernetes namespace of the analysed Pod. Must match the namespace from the originating KubernetesEvent.",
+      "minLength": 1
+    },
+    "verdict": {
+      "type": "string",
+      "description": "The AI agent's classification of the Pod's health state.",
+      "enum": ["HEALTHY", "TRANSIENT_ISSUE", "CRITICAL_FAILURE"]
+    },
+    "rootCauseAnalysis": {
+      "type": "string",
+      "description": "A concise, human-readable explanation of the root cause inferred by the AI agent. Must be factual and grounded in the observed Pod state. Maximum 500 characters.",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "recommendedActions": {
+      "type": "array",
+      "description": "An ordered list of concrete mitigation steps recommended by the AI agent. Each item is a single actionable instruction.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 10
+    }
+  },
+  "required": ["podName", "namespace", "verdict", "rootCauseAnalysis", "recommendedActions"],
+  "additionalProperties": false
+}
