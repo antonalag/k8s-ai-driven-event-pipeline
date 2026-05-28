@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://k8s-ai-driven-event-pipeline/specs/schemas/k8s-event.v1.json",
+  "title": "KubernetesEvent",
+  "description": "Contract schema for a Kubernetes Pod state change event captured by the k8s-collector service.",
+  "type": "object",
+  "properties": {
+    "podName": {
+      "type": "string",
+      "description": "The name of the Kubernetes Pod that triggered the event.",
+      "minLength": 1
+    },
+    "namespace": {
+      "type": "string",
+      "description": "The Kubernetes namespace in which the Pod resides.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "The current phase of the Pod lifecycle, as defined by the Kubernetes Pod phase specification.",
+      "enum": ["Pending", "Running", "Succeeded", "Failed", "Unknown"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The ISO 8601 UTC timestamp at which the event was observed by the collector."
+    }
+  },
+  "required": ["podName", "namespace", "status", "timestamp"],
+  "additionalProperties": false
+}
