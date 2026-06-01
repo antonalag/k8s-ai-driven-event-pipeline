@@ -47,8 +47,9 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 10a:** Update `architecture.md` with definitive Clean Architecture rules: pure domain layer, infrastructure confinement, TDD mandate, no dead specs.
 - [x] **Milestone 10b (In Progress):** Reorganize `services/ai-analyzer` packages into `domain/`, `service/`, `infrastructure/`, `config/` following the new architecture rules. Move framework-annotated classes (`AiAnalysisDocument`) out of `domain/` into `infrastructure/`. Remove dead spec files (`specs/asyncapi-kafka.yaml`, `specs/openapi-ai-agent.yaml`).
 - [x] **Milestone 10c:** Add unit tests for `OllamaAnalyzerService` covering: prompt construction, defensive markdown stripping, clean JSON parsing, and exception handling on malformed responses. All tests must pass green via `./gradlew clean build`.
+- [x] **Milestone 10d:** Add robust unit tests for `OllamaLanguageModelAdapter` covering: history prompt construction, defensive markdown stripping, malformed JSON parsing, and exception handling. All tests must pass green via `./gradlew clean build`.
 
-### 🚀 Phase 5 — Intelligent Correlation & Context History (Next up)
+### ✅ Phase 5 — Intelligent Correlation & Context History (Completed)
 **Architecture:** Enhance the `services/ai-analyzer` reasoning layer to provide the AI model with operational memory. Before sending a `KubernetesEvent` to the AI provider, the system will query OpenSearch via the `AiAnalysisRepositoryPort` to retrieve previous analysis verdicts for the same Pod. This history will be injected into a new system prompt layout, allowing the LLM to cross-reference past failures, detect cascading regressions, and avoid redundant diagnostic steps (BYOK-ready contextual enrichment).
 
 - [x] **Milestone 11:** Update `system.spec.md` and design the prompt template configuration for historical context injection.
