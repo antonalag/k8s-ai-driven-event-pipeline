@@ -3,11 +3,13 @@ package com.platform.analyzer.domain.ports;
 import com.platform.analyzer.domain.model.AiAnalysis;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 
+import java.util.List;
+
 /**
  * Port for executing AI analysis on Kubernetes events.
  * Implementations (Ollama, OpenAI, etc.) reside in infrastructure/.
  */
 public interface AiLanguageModelPort {
 
-    AiAnalysis analyze(KubernetesEvent event);
+    AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history);
 }

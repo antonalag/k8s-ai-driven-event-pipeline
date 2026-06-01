@@ -30,7 +30,7 @@ The system will be built incrementally across 4 isolated, contract-backed layers
 - [x] **Milestone 7 (Completed):** Initialize the `services/ai-analyzer` microservice (Spring Boot 3.5.x, Java 21, Gradle multi-project module). Implemented reactive Kafka consumer backbone (`PodEventConsumer`) with selective routing (Failed/Pending/Unknown only), Ollama `RestClient` integration (`OllamaAnalyzerService`), structured SRE system prompt with embedded JSON Schema contract, and defensive markdown-fence stripping for reliable `AiAnalysis` parsing.
 - [x] **Milestone 8 (Completed):** Evolved `services/ai-analyzer` into a hybrid Consumer+Producer service. After a successful Ollama diagnosis, the structured `AiAnalysis` result is published to the `ai-analysis-events` Kafka topic via a `KafkaTemplate`-backed `AiAnalysisProducer` (async send with per-pod partition key). The intelligence pipeline loop is closed.
 
-### 🚧 Phase 4 — Storage Layer (In Progress)
+### ✅ Phase 4 — Storage Layer (Completed)
 **Architecture:** The `services/ai-analyzer` service is extended to also act as a consumer of the `ai-analysis-events` topic. Each consumed `AiAnalysisEvent` is persisted as a document in the `ai-analysis-reports` OpenSearch index. This gives the platform a durable, queryable store of all AI verdicts, enabling historical analysis, SRE dashboards, and audit trails.
 
 **Storage contract:**
@@ -41,9 +41,16 @@ The system will be built incrementally across 4 isolated, contract-backed layers
 
 - [x] **Milestone 9 (Completed):** Implement `AiAnalysisDocument` entity, `AiAnalysisRepository` (Spring Data OpenSearch), and `AiAnalysisStorageConsumer` Kafka listener that persists every `ai-analysis-events` message to the `ai-analysis-reports` index.
 
-### 🔧 Cross-Cutting — Code Quality & Architecture Refactor (In Progress)
+### ✅ Phase 5 — Cross-Cutting — Code Quality & Architecture Refactor (Completed)
 This milestone is transversal and applies to all existing services. It enforces Clean Architecture, DDD layering, TDD coverage, and spec hygiene across the entire codebase.
 
 - [x] **Milestone 10a:** Update `architecture.md` with definitive Clean Architecture rules: pure domain layer, infrastructure confinement, TDD mandate, no dead specs.
-- [ ] **Milestone 10b (In Progress):** Reorganize `services/ai-analyzer` packages into `domain/`, `service/`, `infrastructure/`, `config/` following the new architecture rules. Move framework-annotated classes (`AiAnalysisDocument`) out of `domain/` into `infrastructure/`. Remove dead spec files (`specs/asyncapi-kafka.yaml`, `specs/openapi-ai-agent.yaml`).
-- [ ] **Milestone 10c:** Add unit tests for `OllamaAnalyzerService` covering: prompt construction, defensive markdown stripping, clean JSON parsing, and exception handling on malformed responses. All tests must pass green via `./gradlew clean build`.
+- [x] **Milestone 10b (In Progress):** Reorganize `services/ai-analyzer` packages into `domain/`, `service/`, `infrastructure/`, `config/` following the new architecture rules. Move framework-annotated classes (`AiAnalysisDocument`) out of `domain/` into `infrastructure/`. Remove dead spec files (`specs/asyncapi-kafka.yaml`, `specs/openapi-ai-agent.yaml`).
+- [x] **Milestone 10c:** Add unit tests for `OllamaAnalyzerService` covering: prompt construction, defensive markdown stripping, clean JSON parsing, and exception handling on malformed responses. All tests must pass green via `./gradlew clean build`.
+
+### 🚀 Phase 5 — Intelligent Correlation & Context History (Next up)
+**Architecture:** Enhance the `services/ai-analyzer` reasoning layer to provide the AI model with operational memory. Before sending a `KubernetesEvent` to the AI provider, the system will query OpenSearch via the `AiAnalysisRepositoryPort` to retrieve previous analysis verdicts for the same Pod. This history will be injected into a new system prompt layout, allowing the LLM to cross-reference past failures, detect cascading regressions, and avoid redundant diagnostic steps (BYOK-ready contextual enrichment).
+
+- [x] **Milestone 11:** Update `system.spec.md` and design the prompt template configuration for historical context injection.
+- [x] **Milestone 12:** Adapt `AiLanguageModelPort` and `OllamaAnalyzerService` to orchestrate history retrieval and inject past verdicts into the reasoning pipeline.
+- [x] **Milestone 13:** Update the Ollama/BYOK infrastructure adapter to parse the history list and format it cleanly inside the LLM prompt without regression.

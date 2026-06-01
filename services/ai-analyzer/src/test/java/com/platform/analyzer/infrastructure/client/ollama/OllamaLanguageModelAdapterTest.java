@@ -13,20 +13,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-/**
- * Unit tests for OllamaLanguageModelAdapter — prompt construction, parsing, exceptions.
- */
 class OllamaLanguageModelAdapterTest {
 
     private ObjectMapper objectMapper;
 
     private static final String MODEL = "llama3.1";
     private static final Instant FIXED_INSTANT = Instant.parse("2024-01-15T10:30:00Z");
+    private static final List<AiAnalysis> EMPTY_HISTORY = Collections.emptyList();
 
     private static final KubernetesEvent FAILED_POD_EVENT = new KubernetesEvent(
             "payment-service-7d9f8b-xkp2q",
@@ -77,35 +77,35 @@ class OllamaLanguageModelAdapterTest {
         @Test
         @DisplayName("should inject podName into the prompt")
         void shouldInjectPodName() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt).contains("payment-service-7d9f8b-xkp2q");
         }
 
         @Test
         @DisplayName("should inject namespace into the prompt")
         void shouldInjectNamespace() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt).contains("production");
         }
 
         @Test
         @DisplayName("should inject pod status into the prompt")
         void shouldInjectStatus() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt).contains("Failed");
         }
 
         @Test
         @DisplayName("should inject timestamp into the prompt")
         void shouldInjectTimestamp() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt).contains(FIXED_INSTANT.toString());
         }
 
         @Test
         @DisplayName("should include the JSON schema contract in the prompt")
         void shouldIncludeSchemaContract() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt)
                     .contains("HEALTHY")
                     .contains("TRANSIENT_ISSUE")
@@ -117,8 +117,27 @@ class OllamaLanguageModelAdapterTest {
         @Test
         @DisplayName("should forbid markdown fences in the prompt instructions")
         void shouldForbidMarkdownFencesInInstructions() {
-            String prompt = adapter.buildPrompt(FAILED_POD_EVENT);
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
             assertThat(prompt).contains("Do NOT include markdown code fences");
+        }
+
+        @Test
+        @DisplayName("should include 'No previous analysis' when history is empty")
+        void shouldIncludeNoHistoryMessage() {
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, EMPTY_HISTORY);
+            assertThat(prompt).contains("No previous analysis records found for this pod.");
+        }
+
+        @Test
+        @DisplayName("should include history entries when history is not empty")
+        void shouldIncludeHistoryEntries() {
+            List<AiAnalysis> history = List.of(
+                    new AiAnalysis("payment-service-7d9f8b-xkp2q", "production",
+                            "TRANSIENT_ISSUE", "Scheduling delay", List.of("Wait")));
+
+            String prompt = adapter.buildPrompt(FAILED_POD_EVENT, history);
+            assertThat(prompt).contains("Verdict: TRANSIENT_ISSUE");
+            assertThat(prompt).contains("Root Cause: Scheduling delay");
         }
     }
 
@@ -231,7 +250,7 @@ class OllamaLanguageModelAdapterTest {
         void shouldThrowOnNullOllamaBody() {
             OllamaLanguageModelAdapter svc = adapterWithMockedResponse(null);
 
-            assertThatThrownBy(() -> svc.analyze(FAILED_POD_EVENT))
+            assertThatThrownBy(() -> svc.analyze(FAILED_POD_EVENT, EMPTY_HISTORY))
                     .isInstanceOf(AiAnalysisException.class)
                     .hasMessageContaining("null or empty response")
                     .hasMessageContaining("payment-service-7d9f8b-xkp2q");
@@ -242,7 +261,7 @@ class OllamaLanguageModelAdapterTest {
         void shouldThrowOnNullResponseField() {
             OllamaLanguageModelAdapter svc = adapterWithMockedResponse(new OllamaResponse(null));
 
-            assertThatThrownBy(() -> svc.analyze(FAILED_POD_EVENT))
+            assertThatThrownBy(() -> svc.analyze(FAILED_POD_EVENT, EMPTY_HISTORY))
                     .isInstanceOf(AiAnalysisException.class)
                     .hasMessageContaining("null or empty response");
         }
@@ -257,7 +276,7 @@ class OllamaLanguageModelAdapterTest {
         void shouldReturnAnalysisOnValidResponse() {
             OllamaLanguageModelAdapter svc = adapterWithMockedResponse(new OllamaResponse(VALID_JSON_RESPONSE));
 
-            AiAnalysis result = svc.analyze(FAILED_POD_EVENT);
+            AiAnalysis result = svc.analyze(FAILED_POD_EVENT, EMPTY_HISTORY);
 
             assertThat(result).isNotNull();
             assertThat(result.podName()).isEqualTo("payment-service-7d9f8b-xkp2q");
@@ -273,7 +292,7 @@ class OllamaLanguageModelAdapterTest {
             String fencedResponse = "```json\n" + VALID_JSON_RESPONSE.strip() + "\n```";
             OllamaLanguageModelAdapter svc = adapterWithMockedResponse(new OllamaResponse(fencedResponse));
 
-            AiAnalysis result = svc.analyze(FAILED_POD_EVENT);
+            AiAnalysis result = svc.analyze(FAILED_POD_EVENT, EMPTY_HISTORY);
 
             assertThat(result.verdict()).isEqualTo("CRITICAL_FAILURE");
         }
@@ -283,7 +302,7 @@ class OllamaLanguageModelAdapterTest {
         void shouldMapRecommendedActionsList() {
             OllamaLanguageModelAdapter svc = adapterWithMockedResponse(new OllamaResponse(VALID_JSON_RESPONSE));
 
-            AiAnalysis result = svc.analyze(FAILED_POD_EVENT);
+            AiAnalysis result = svc.analyze(FAILED_POD_EVENT, EMPTY_HISTORY);
 
             assertThat(result.recommendedActions())
                     .hasSize(3)

@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Adapter implementing AiLanguageModelPort using Ollama as the AI provider.
  * Activated when platform.ai.provider=ollama.
@@ -50,6 +53,9 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
             transient network issue.
             - CRITICAL_FAILURE → Pod is Failed; immediate intervention required.
 
+            HISTORICAL CONTEXT (Previous diagnostic verdicts for this Pod, from newest to oldest):
+            %s
+
             INPUT EVENT:
             - podName:   %s
             - namespace: %s
@@ -73,11 +79,12 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
     }
 
     @Override
-    public AiAnalysis analyze(KubernetesEvent event) {
-        String prompt = buildPrompt(event);
+    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history) {
+        String prompt = buildPrompt(event, history);
         OllamaRequest request = new OllamaRequest(model, prompt, false);
 
-        log.debug("Sending event for pod '{}' to Ollama model '{}'", event.podName(), model);
+        log.debug("Sending event for pod '{}' to Ollama model '{}' with {} history records",
+                event.podName(), model, history.size());
 
         OllamaResponse ollamaResponse = callOllama(request);
 
@@ -98,8 +105,19 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
                 .body(OllamaResponse.class);
     }
 
-    String buildPrompt(KubernetesEvent event) {
+    String buildPrompt(KubernetesEvent event, List<AiAnalysis> history) {
+        String historyContext;
+        if (history == null || history.isEmpty()) {
+            historyContext = "No previous analysis records found for this pod.";
+        } else {
+            historyContext = history.stream()
+                    .map(a -> "  - Verdict: %s | Root Cause: %s".formatted(
+                            a.verdict(), a.rootCauseAnalysis()))
+                    .collect(Collectors.joining("\n"));
+        }
+
         return SYSTEM_PROMPT_TEMPLATE.formatted(
+                historyContext,
                 event.podName(),
                 event.namespace(),
                 event.status(),
