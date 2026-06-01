@@ -1,7 +1,6 @@
 package com.platform.analyzer.infrastructure.persistence.opensearch;
 
 import com.platform.analyzer.domain.model.AiAnalysis;
-import com.platform.analyzer.domain.model.AiAnalysisEvent;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
