@@ -55,3 +55,9 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 11:** Update `system.spec.md` and design the prompt template configuration for historical context injection.
 - [x] **Milestone 12:** Adapt `AiLanguageModelPort` and `OllamaAnalyzerService` to orchestrate history retrieval and inject past verdicts into the reasoning pipeline.
 - [x] **Milestone 13:** Update the Ollama/BYOK infrastructure adapter to parse the history list and format it cleanly inside the LLM prompt without regression.
+
+### 🌐 Phase 6 — Multi-Model Support & BYOK Strategy (Up Next)
+**Architecture:** Decouple the intelligence layer from Ollama-specific configurations to allow seamless switching between local LLMs and cloud-based providers (OpenAI, Anthropic, or custom corporate endpoints) via API Keys (Bring Your Own Key). This introduces an agnostic AI routing configuration and a standard payload mapper.
+
+- [x] **Milestone 14:** Define a unified `@ConfigurationProperties` class in `config/` to register and validate all platform properties, eliminating unknown property warnings.
+- [x] **Milestone 15:** Design the infrastructure skeleton for the generic HTTP BYOK Adapter (`ByokLanguageModelAdapter`) activated via `platform.ai.provider=byok`.

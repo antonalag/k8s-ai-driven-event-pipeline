@@ -1,18 +1,13 @@
 package com.platform.analyzer.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
-/**
- * Spring configuration that exposes a {@link RestClient} bean pre-configured
- * to communicate with the local Ollama HTTP API.
- *
- * <p>The base URL is read from {@code ollama.api.url} in {@code application.properties}
- * and can be overridden at runtime via the {@code OLLAMA_API_URL} environment variable.
- */
 @Configuration
+@EnableConfigurationProperties(PlatformProperties.class)
 public class OllamaConfig {
 
     @Value("${ollama.api.url}")
