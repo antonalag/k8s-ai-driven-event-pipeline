@@ -39,4 +39,11 @@ The system will be built incrementally across 4 isolated, contract-backed layers
 - **Fields:** all fields from `specs/schemas/ai-analysis.v1.json` plus pipeline metadata (`analyzedAt`, `sourceEventTimestamp`)
 - **Client:** `spring-data-opensearch-starter` (Spring Data compatible, OpenSearch 2.x)
 
-- [ ] **Milestone 9 (In Progress):** Add OpenSearch infrastructure to Docker Compose. Implement `AiAnalysisDocument` entity, `AiAnalysisRepository` (Spring Data OpenSearch), and `AiAnalysisStorageConsumer` Kafka listener that persists every `ai-analysis-events` message to the `ai-analysis-reports` index.
+- [x] **Milestone 9 (Completed):** Implement `AiAnalysisDocument` entity, `AiAnalysisRepository` (Spring Data OpenSearch), and `AiAnalysisStorageConsumer` Kafka listener that persists every `ai-analysis-events` message to the `ai-analysis-reports` index.
+
+### 🔧 Cross-Cutting — Code Quality & Architecture Refactor (In Progress)
+This milestone is transversal and applies to all existing services. It enforces Clean Architecture, DDD layering, TDD coverage, and spec hygiene across the entire codebase.
+
+- [x] **Milestone 10a:** Update `architecture.md` with definitive Clean Architecture rules: pure domain layer, infrastructure confinement, TDD mandate, no dead specs.
+- [ ] **Milestone 10b (In Progress):** Reorganize `services/ai-analyzer` packages into `domain/`, `service/`, `infrastructure/`, `config/` following the new architecture rules. Move framework-annotated classes (`AiAnalysisDocument`) out of `domain/` into `infrastructure/`. Remove dead spec files (`specs/asyncapi-kafka.yaml`, `specs/openapi-ai-agent.yaml`).
+- [ ] **Milestone 10c:** Add unit tests for `OllamaAnalyzerService` covering: prompt construction, defensive markdown stripping, clean JSON parsing, and exception handling on malformed responses. All tests must pass green via `./gradlew clean build`.
