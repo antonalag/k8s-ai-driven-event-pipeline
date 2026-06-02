@@ -61,3 +61,4 @@ This milestone is transversal and applies to all existing services. It enforces 
 
 - [x] **Milestone 14:** Define a unified `@ConfigurationProperties` class in `config/` to register and validate all platform properties, eliminating unknown property warnings.
 - [x] **Milestone 15:** Design the infrastructure skeleton for the generic HTTP BYOK Adapter (`ByokLanguageModelAdapter`) activated via `platform.ai.provider=byok`.
+- [x] **Milestone 16:** Implement the real HTTP client, Java 21 DTO records, payload mappers (`ByokPayloadMapper`, `ByokResponseExtractor`), and full `ByokLanguageModelAdapter` orchestration for external AI providers (OpenAI-compatible and custom endpoints) with defensive parsing and TDD coverage.

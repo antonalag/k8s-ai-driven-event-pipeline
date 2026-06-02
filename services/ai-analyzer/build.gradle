@@ -21,6 +21,9 @@ dependencies {
     // Spring Boot web — required for RestClient (Ollama HTTP calls) and @ConfigurationProperties
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Jakarta Bean Validation — required for @NotBlank on @ConfigurationProperties records
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     // Spring Data OpenSearch — Spring Data compatible integration with OpenSearch 2.x
     // 1.8.x is the latest 1.x line, compatible with Spring Boot 3.5.x / Spring Data 2025.0
     implementation 'org.opensearch.client:spring-data-opensearch-starter:1.8.1'

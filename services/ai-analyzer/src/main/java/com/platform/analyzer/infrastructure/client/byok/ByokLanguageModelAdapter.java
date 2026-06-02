@@ -1,25 +1,115 @@
 package com.platform.analyzer.infrastructure.client.byok;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.platform.analyzer.config.ByokProperties;
 import com.platform.analyzer.domain.model.AiAnalysis;
 import com.platform.analyzer.domain.model.KubernetesEvent;
+import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
 /**
- * BYOK (Bring Your Own Key) adapter skeleton for external AI providers.
- * Activated when platform.ai.provider=byok.
- * Full implementation will arrive in the next phase.
+ * BYOK (Bring Your Own Key) adapter for external AI providers.
+ * Supports OpenAI-compatible and custom (Ollama-like) endpoints.
+ * Activated when {@code platform.ai.provider=byok}.
  */
 @Component
 @ConditionalOnProperty(name = "platform.ai.provider", havingValue = "byok")
 public class ByokLanguageModelAdapter implements AiLanguageModelPort {
 
+    private static final Logger log = LoggerFactory.getLogger(ByokLanguageModelAdapter.class);
+
+    private final RestClient byokRestClient;
+    private final ObjectMapper objectMapper;
+    private final ByokPayloadMapper payloadMapper;
+    private final ByokResponseExtractor responseExtractor;
+    private final ByokProperties properties;
+
+    public ByokLanguageModelAdapter(
+            RestClient byokRestClient,
+            ObjectMapper objectMapper,
+            ByokPayloadMapper payloadMapper,
+            ByokResponseExtractor responseExtractor,
+            ByokProperties properties) {
+        this.byokRestClient = byokRestClient;
+        this.objectMapper = objectMapper;
+        this.payloadMapper = payloadMapper;
+        this.responseExtractor = responseExtractor;
+        this.properties = properties;
+    }
+
     @Override
     public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history) {
-        throw new UnsupportedOperationException(
-                "BYOK adapter is not yet implemented. Configure platform.ai.provider=ollama or provide a full implementation in a future phase.");
+        log.debug("BYOK analysis for pod '{}' using model '{}' with {} history records",
+                event.podName(), properties.model(), history.size());
+
+        // 1. Build request body per provider type
+        Object requestBody = payloadMapper.buildRequestBody(
+                event, history, properties.model(), properties.providerType());
+
+        // 2. HTTP POST to the external provider
+        String responseBody = callProvider(requestBody);
+
+        // 3. Extract raw AI text from response
+        String rawContent = responseExtractor.extractContent(
+                responseBody, properties.providerType());
+
+        // 4. Defensive parse into AiAnalysis
+        return parseAnalysis(rawContent, event.podName());
+    }
+
+    protected String callProvider(Object requestBody) {
+        try {
+            return byokRestClient
+                    .post()
+                    .uri(resolveUri())
+                    .body(requestBody)
+                    .retrieve()
+                    .body(String.class);
+        } catch (HttpClientErrorException e) {
+            throw new AiAnalysisException(
+                    "BYOK provider returned HTTP %d: %s".formatted(
+                            e.getStatusCode().value(), e.getResponseBodyAsString()), e);
+        } catch (HttpServerErrorException e) {
+            throw new AiAnalysisException(
+                    "BYOK provider server failure HTTP %d".formatted(
+                            e.getStatusCode().value()), e);
+        } catch (ResourceAccessException e) {
+            throw new AiAnalysisException(
+                    "Network error calling BYOK provider at '%s': %s".formatted(
+                            properties.endpoint(), e.getMessage()), e);
+        }
+    }
+
+    private String resolveUri() {
+        return switch (properties.providerType()) {
+            case OPENAI_COMPATIBLE -> "/v1/chat/completions";
+            case CUSTOM -> "/api/generate";
+        };
+    }
+
+    AiAnalysis parseAnalysis(String rawResponse, String podName) {
+        String cleaned = rawResponse.strip();
+        if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replaceAll("^```[a-zA-Z]*\\n?", "")
+                    .replaceAll("```$", "").strip();
+        }
+        try {
+            return objectMapper.readValue(cleaned, AiAnalysis.class);
+        } catch (JsonProcessingException e) {
+            throw new AiAnalysisException(
+                    "Failed to parse BYOK response as AiAnalysis for pod '%s'. Raw: %s"
+                            .formatted(podName, rawResponse), e);
+        }
     }
 }
