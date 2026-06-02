@@ -56,9 +56,10 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 12:** Adapt `AiLanguageModelPort` and `OllamaAnalyzerService` to orchestrate history retrieval and inject past verdicts into the reasoning pipeline.
 - [x] **Milestone 13:** Update the Ollama/BYOK infrastructure adapter to parse the history list and format it cleanly inside the LLM prompt without regression.
 
-### 🌐 Phase 6 — Multi-Model Support & BYOK Strategy (Up Next)
+### ✅ Phase 6 — Multi-Model Support & BYOK Strategy (Completed)
 **Architecture:** Decouple the intelligence layer from Ollama-specific configurations to allow seamless switching between local LLMs and cloud-based providers (OpenAI, Anthropic, or custom corporate endpoints) via API Keys (Bring Your Own Key). This introduces an agnostic AI routing configuration and a standard payload mapper.
 
 - [x] **Milestone 14:** Define a unified `@ConfigurationProperties` class in `config/` to register and validate all platform properties, eliminating unknown property warnings.
 - [x] **Milestone 15:** Design the infrastructure skeleton for the generic HTTP BYOK Adapter (`ByokLanguageModelAdapter`) activated via `platform.ai.provider=byok`.
 - [x] **Milestone 16:** Implement the real HTTP client, Java 21 DTO records, payload mappers (`ByokPayloadMapper`, `ByokResponseExtractor`), and full `ByokLanguageModelAdapter` orchestration for external AI providers (OpenAI-compatible and custom endpoints) with defensive parsing and TDD coverage.
+- [x] **Milestone 17:** Dynamic AI Provider Routing — Orchestrate runtime selection between Ollama and BYOK adapters via `@ConditionalOnProperty(name = "platform.ai.provider")` on each `@Configuration` class. Removed `@Component` from all adapters (now POJOs instantiated by `@Bean` methods). Added `AiProviderValidator` with `@PostConstruct` fail-fast validation. Full PBT suite (jqwik) covering 7 correctness properties, ArchUnit tests enforcing domain purity, and integration tests validating mutual exclusivity of provider beans.

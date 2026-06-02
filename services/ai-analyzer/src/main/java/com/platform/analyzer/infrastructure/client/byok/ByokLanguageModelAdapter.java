@@ -9,8 +9,6 @@ import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -21,10 +19,8 @@ import java.util.List;
 /**
  * BYOK (Bring Your Own Key) adapter for external AI providers.
  * Supports OpenAI-compatible and custom (Ollama-like) endpoints.
- * Activated when {@code platform.ai.provider=byok}.
+ * Instantiated by {@link com.platform.analyzer.config.ByokConfig} when platform.ai.provider=byok.
  */
-@Component
-@ConditionalOnProperty(name = "platform.ai.provider", havingValue = "byok")
 public class ByokLanguageModelAdapter implements AiLanguageModelPort {
 
     private static final Logger log = LoggerFactory.getLogger(ByokLanguageModelAdapter.class);
@@ -77,9 +73,13 @@ public class ByokLanguageModelAdapter implements AiLanguageModelPort {
                     .retrieve()
                     .body(String.class);
         } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            if (body.length() > 1024) {
+                body = body.substring(0, 1024);
+            }
             throw new AiAnalysisException(
                     "BYOK provider returned HTTP %d: %s".formatted(
-                            e.getStatusCode().value(), e.getResponseBodyAsString()), e);
+                            e.getStatusCode().value(), body), e);
         } catch (HttpServerErrorException e) {
             throw new AiAnalysisException(
                     "BYOK provider server failure HTTP %d".formatted(

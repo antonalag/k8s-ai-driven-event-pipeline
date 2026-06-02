@@ -55,7 +55,7 @@ class OllamaLanguageModelAdapterTest {
     }
 
     private OllamaLanguageModelAdapter adapterWithMockedResponse(OllamaResponse response) {
-        return new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL) {
+        return new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL, "http://localhost:11434") {
             @Override
             protected OllamaResponse callOllama(OllamaRequest request) {
                 return response;
@@ -71,7 +71,7 @@ class OllamaLanguageModelAdapterTest {
 
         @BeforeEach
         void setUp() {
-            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL);
+            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL, "http://localhost:11434");
         }
 
         @Test
@@ -149,7 +149,7 @@ class OllamaLanguageModelAdapterTest {
 
         @BeforeEach
         void setUp() {
-            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL);
+            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL, "http://localhost:11434");
         }
 
         @Test
@@ -224,7 +224,7 @@ class OllamaLanguageModelAdapterTest {
 
         @BeforeEach
         void setUp() {
-            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL);
+            adapter = new OllamaLanguageModelAdapter(mock(RestClient.class), objectMapper, MODEL, "http://localhost:11434");
         }
 
         @Test

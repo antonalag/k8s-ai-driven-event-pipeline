@@ -5,7 +5,6 @@ import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.infrastructure.client.byok.dto.CustomProviderRequest;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiMessage;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiRequest;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
  * Builds the HTTP request body for the configured BYOK provider type.
  * Reuses the same SRE system prompt template as the Ollama adapter for output consistency.
  */
-@Component
 public class ByokPayloadMapper {
 
     static final String SYSTEM_PROMPT_TEMPLATE = """

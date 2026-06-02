@@ -8,9 +8,9 @@ import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
@@ -18,10 +18,8 @@ import java.util.stream.Collectors;
 
 /**
  * Adapter implementing AiLanguageModelPort using Ollama as the AI provider.
- * Activated when platform.ai.provider=ollama.
+ * Instantiated by {@link com.platform.analyzer.config.OllamaConfig} when platform.ai.provider=ollama.
  */
-@Component
-@ConditionalOnProperty(name = "platform.ai.provider", havingValue = "ollama")
 public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
 
     private static final Logger log = LoggerFactory.getLogger(OllamaLanguageModelAdapter.class);
@@ -68,14 +66,17 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
     private final RestClient ollamaRestClient;
     private final ObjectMapper objectMapper;
     private final String model;
+    private final String baseUrl;
 
     public OllamaLanguageModelAdapter(
             RestClient ollamaRestClient,
             ObjectMapper objectMapper,
-            @Value("${ollama.model}") String model) {
+            String model,
+            String baseUrl) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
         this.model = model;
+        this.baseUrl = baseUrl;
     }
 
     @Override
@@ -97,12 +98,26 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
     }
 
     protected OllamaResponse callOllama(OllamaRequest request) {
-        return ollamaRestClient
-                .post()
-                .uri("/api/generate")
-                .body(request)
-                .retrieve()
-                .body(OllamaResponse.class);
+        try {
+            return ollamaRestClient
+                    .post()
+                    .uri("/api/generate")
+                    .body(request)
+                    .retrieve()
+                    .body(OllamaResponse.class);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new AiAnalysisException(
+                    "Ollama returned HTTP %d at '%s/api/generate'".formatted(
+                            e.getStatusCode().value(), getBaseUrl()), e);
+        } catch (ResourceAccessException e) {
+            throw new AiAnalysisException(
+                    "Cannot connect to Ollama at '%s': %s".formatted(
+                            getBaseUrl(), e.getMessage()), e);
+        }
+    }
+
+    private String getBaseUrl() {
+        return baseUrl;
     }
 
     String buildPrompt(KubernetesEvent event, List<AiAnalysis> history) {

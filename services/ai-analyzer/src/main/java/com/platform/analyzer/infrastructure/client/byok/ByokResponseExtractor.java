@@ -5,13 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.infrastructure.client.byok.dto.CustomProviderResponse;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiResponse;
-import org.springframework.stereotype.Component;
 
 /**
  * Extracts the raw AI text content from the provider's HTTP response body
  * based on the configured {@link ProviderType}.
  */
-@Component
 public class ByokResponseExtractor {
 
     private final ObjectMapper objectMapper;

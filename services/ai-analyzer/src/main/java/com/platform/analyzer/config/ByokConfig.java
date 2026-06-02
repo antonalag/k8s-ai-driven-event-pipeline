@@ -1,5 +1,10 @@
 package com.platform.analyzer.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.infrastructure.client.byok.ByokLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.client.byok.ByokPayloadMapper;
+import com.platform.analyzer.infrastructure.client.byok.ByokResponseExtractor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +13,6 @@ import org.springframework.web.client.RestClient;
 
 /**
  * Spring configuration for the BYOK AI provider.
- * Creates a dedicated {@link RestClient} bean with Bearer authentication header.
  * Only active when {@code platform.ai.provider=byok}.
  */
 @Configuration
@@ -24,5 +28,26 @@ public class ByokConfig {
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Authorization", "Bearer " + properties.apiKey())
                 .build();
+    }
+
+    @Bean
+    ByokPayloadMapper byokPayloadMapper() {
+        return new ByokPayloadMapper();
+    }
+
+    @Bean
+    ByokResponseExtractor byokResponseExtractor(ObjectMapper objectMapper) {
+        return new ByokResponseExtractor(objectMapper);
+    }
+
+    @Bean
+    AiLanguageModelPort aiLanguageModelPort(
+            RestClient byokRestClient,
+            ObjectMapper objectMapper,
+            ByokPayloadMapper payloadMapper,
+            ByokResponseExtractor responseExtractor,
+            ByokProperties properties) {
+        return new ByokLanguageModelAdapter(
+                byokRestClient, objectMapper, payloadMapper, responseExtractor, properties);
     }
 }

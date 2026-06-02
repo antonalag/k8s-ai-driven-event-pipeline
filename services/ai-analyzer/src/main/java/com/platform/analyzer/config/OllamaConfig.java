@@ -1,30 +1,41 @@
 package com.platform.analyzer.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Spring configuration for the Ollama AI provider.
+ * Only active when {@code platform.ai.provider=ollama}.
+ */
 @Configuration
+@ConditionalOnProperty(name = "platform.ai.provider", havingValue = "ollama")
 @EnableConfigurationProperties(PlatformProperties.class)
 public class OllamaConfig {
 
     @Value("${ollama.api.url}")
     private String ollamaApiUrl;
 
-    /**
-     * Creates a {@link RestClient} instance pointing to the Ollama API base URL.
-     * All Ollama service calls share this single, reusable client.
-     *
-     * @return a configured {@link RestClient}
-     */
     @Bean
-    public RestClient ollamaRestClient() {
+    RestClient ollamaRestClient() {
         return RestClient.builder()
                 .baseUrl(ollamaApiUrl)
                 .defaultHeader("Content-Type", "application/json")
                 .defaultHeader("Accept", "application/json")
                 .build();
+    }
+
+    @Bean
+    AiLanguageModelPort aiLanguageModelPort(
+            RestClient ollamaRestClient,
+            ObjectMapper objectMapper,
+            @Value("${ollama.model}") String model) {
+        return new OllamaLanguageModelAdapter(ollamaRestClient, objectMapper, model, ollamaApiUrl);
     }
 }
