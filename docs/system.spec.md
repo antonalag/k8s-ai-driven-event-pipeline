@@ -68,3 +68,8 @@ This milestone is transversal and applies to all existing services. It enforces 
 **Architecture:** Protect the event consumption pipeline so that when the AI provider (Ollama or BYOK) fails due to network errors, timeouts, or rate limits (HTTP 429), the pipeline continues processing events. A Circuit Breaker + Fallback decorator wraps `AiLanguageModelPort` in the configuration layer, generating degraded `AiAnalysis` responses (verdict "DEGRADED") when the provider is unavailable. Domain purity is preserved — the service layer remains unaware of the resilience mechanism.
 
 - [x] **Milestone 18 (Completed):** Implement Circuit Breaker with Fallback — `ResilientAiLanguageModelAdapter` decorator wrapping `AiLanguageModelPort` via Resilience4j, `CircuitBreakerProperties` externalized configuration, `ResilienceConfig` with `@Primary` decorated bean, state transition logging, and full PBT suite (jqwik) covering 9 correctness properties. 83 tests passing.
+
+### ✅ Phase 8 — CI/CD Pipeline Setup (Completed)
+**Architecture:** Automate build verification and security scanning on every push/PR via GitHub Actions. The pipeline enforces compilation, full test suite execution, and filesystem vulnerability scanning using Trivy. All workflow actions are SHA-pinned (immutable references) following supply-chain security best practices.
+
+- [x] **Milestone 19 (Completed):** Configure GitHub Actions CI workflow at `.github/workflows/ci.yml` — SHA-pinned actions (checkout `v4.1.1`, setup-java `v4.2.1`, trivy-action `v0.18.0`), explicit minimal permissions (`contents: read`), Java 21 Temurin with Gradle cache, `./gradlew test --no-daemon`, and Trivy fs scan with `CRITICAL,HIGH` severity gate + `exit-code: 1` fail policy.
