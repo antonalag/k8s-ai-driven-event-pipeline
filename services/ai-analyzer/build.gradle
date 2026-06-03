@@ -32,6 +32,9 @@ dependencies {
     // Version managed by Spring Boot BOM (3.5.14 → spring-kafka 3.3.x)
     implementation 'org.springframework.kafka:spring-kafka'
 
+    // Resilience4j — Circuit Breaker (Pipeline Resilience)
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+
     // Jackson Databind — required by JsonDeserializer to reconstruct KubernetesEvent records
     // spring-boot-starter does not pull the web stack, so jackson must be declared explicitly
     implementation 'com.fasterxml.jackson.core:jackson-databind'

@@ -55,4 +55,14 @@ class ArchitectureTest {
                 .because("Domain must not depend on configuration layer (Requirement 2.3)")
                 .check(importedClasses);
     }
+
+    @Test
+    void domainAndServiceShouldNotDependOnResilience4j() {
+        noClasses()
+                .that().resideInAnyPackage("com.platform.analyzer.domain..", "com.platform.analyzer.service..")
+                .should().dependOnClassesThat()
+                .resideInAnyPackage("io.github.resilience4j..")
+                .because("Domain and service layers must remain free of resilience infrastructure (Requirement 6.1)")
+                .check(importedClasses);
+    }
 }
