@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: AI Analyzer API
+  version: 1.0.0
+  description: >
+    REST API for querying AI analysis reports from the ai-analyzer service.
+    Provides access to AI-driven diagnostics of Kubernetes pod health,
+    including verdicts, root cause analysis, and recommended actions.
+  contact:
+    name: Platform Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /api/v1/analyses:
+    get:
+      operationId: queryAnalyses
+      summary: Query AI analysis reports
+      description: >
+        Returns AI analysis reports with optional filtering by namespace or podName.
+        When both parameters are provided, namespace takes priority and podName is ignored.
+        Empty string parameters are treated as absent (equivalent to null).
+        Results are ordered by analyzedAt descending.
+      parameters:
+        - name: namespace
+          in: query
+          required: false
+          description: Filter analyses by Kubernetes namespace
+          schema:
+            type: string
+          example: production
+        - name: podName
+          in: query
+          required: false
+          description: Filter analyses by pod name (ignored if namespace is provided)
+          schema:
+            type: string
+          example: nginx-deployment-abc123
+      responses:
+        '200':
+          description: Successful query — returns array of analysis reports (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiAnalysisResponse'
+              examples:
+                withResults:
+                  summary: Response with analysis results
+                  value:
+                    - podName: nginx-abc
+                      namespace: production
+                      verdict: CRITICAL_FAILURE
+                      rootCauseAnalysis: "Pod terminated due to OOMKilled — memory limit exceeded"
+                      recommendedActions:
+                        - "Increase memory limits in deployment spec"
+                        - "Review application memory usage patterns"
+                      analyzedAt: "2024-01-15T10:30:00Z"
+                emptyResults:
+                  summary: No matching analyses found
+                  value: []
+        '400':
+          description: Validation error — malformed query parameters
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                type: "urn:problem-type:validation-error"
+                title: "Bad Request"
+                status: 400
+                detail: "Query parameter validation failed"
+                instance: "/api/v1/analyses"
+        '502':
+          description: AI provider upstream failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                type: "urn:problem-type:ai-provider-failure"
+                title: "Bad Gateway"
+                status: 502
+                detail: "AI provider is not responding"
+                instance: "/api/v1/analyses"
+        '503':
+          description: Service unavailable — circuit breaker open or backend unreachable
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                type: "urn:problem-type:circuit-breaker-open"
+                title: "Service Unavailable"
+                status: 503
+                detail: "Circuit breaker is open — service temporarily unavailable"
+                instance: "/api/v1/analyses"
+
+components:
+  schemas:
+    AiAnalysisResponse:
+      type: object
+      description: AI analysis report for a Kubernetes pod
+      required:
+        - podName
+        - namespace
+        - verdict
+        - rootCauseAnalysis
+        - recommendedActions
+        - analyzedAt
+      properties:
+        podName:
+          type: string
+          description: Name of the analyzed Kubernetes pod
+          example: nginx-deployment-abc123
+        namespace:
+          type: string
+          description: Kubernetes namespace of the analyzed pod
+          example: production
+        verdict:
+          type: string
+          description: AI-determined health verdict for the pod
+          enum:
+            - HEALTHY
+            - TRANSIENT_ISSUE
+            - CRITICAL_FAILURE
+          example: CRITICAL_FAILURE
+        rootCauseAnalysis:
+          type: string
+          description: AI-generated explanation of the root cause
+          example: "Pod terminated due to OOMKilled — memory limit exceeded"
+        recommendedActions:
+          type: array
+          description: List of AI-recommended remediation actions
+          items:
+            type: string
+          example:
+            - "Increase memory limits in deployment spec"
+            - "Review application memory usage patterns"
+        analyzedAt:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp of when the analysis was performed
+          example: "2024-01-15T10:30:00Z"
+
+    ProblemDetail:
+      type: object
+      description: >
+        RFC 7807 Problem Details for HTTP APIs.
+        Provides machine-readable error information for API consumers.
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI reference that identifies the problem type
+          example: "urn:problem-type:circuit-breaker-open"
+        title:
+          type: string
+          description: A short human-readable summary of the problem type
+          example: "Service Unavailable"
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code
+          example: 503
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence
+          example: "Circuit breaker is open — service temporarily unavailable"
+        instance:
+          type: string
+          format: uri
+          description: A URI reference that identifies the specific occurrence
+          example: "/api/v1/analyses"

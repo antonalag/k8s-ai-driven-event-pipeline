@@ -1,6 +1,7 @@
 package com.platform.analyzer.infrastructure.persistence.opensearch;
 
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.AiAnalysisView;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -55,6 +56,10 @@ public class AiAnalysisDocument {
 
     public AiAnalysis toDomain() {
         return new AiAnalysis(podName, namespace, verdict, rootCauseAnalysis, recommendedActions);
+    }
+
+    public AiAnalysisView toView() {
+        return new AiAnalysisView(podName, namespace, verdict, rootCauseAnalysis, recommendedActions, analyzedAt);
     }
 
     public String getId() { return id; }

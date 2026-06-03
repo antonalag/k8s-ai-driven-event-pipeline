@@ -14,4 +14,6 @@ public interface SpringDataAiAnalysisRepository extends ElasticsearchRepository<
     List<AiAnalysisDocument> findByPodNameOrderByAnalyzedAtDesc(String podName);
 
     List<AiAnalysisDocument> findByVerdict(String verdict);
+
+    List<AiAnalysisDocument> findByNamespaceOrderByAnalyzedAtDesc(String namespace);
 }

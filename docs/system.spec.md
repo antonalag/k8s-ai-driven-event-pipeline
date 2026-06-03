@@ -74,7 +74,8 @@ This milestone is transversal and applies to all existing services. It enforces 
 
 - [x] **Milestone 19 (Completed):** Configure GitHub Actions CI workflow at `.github/workflows/ci.yml` — SHA-pinned actions (checkout `v4.1.1`, setup-java `v4.2.1`, trivy-action `v0.18.0`), explicit minimal permissions (`contents: read`), Java 21 Temurin with Gradle cache, `./gradlew test --no-daemon`, and Trivy fs scan with `CRITICAL,HIGH` severity gate + `exit-code: 1` fail policy.
 
-### [ ] Phase 9 — API Contracts & RFC 7807 Implementation (In Progress)
+### ✅ Phase 9 — API Contracts & RFC 7807 Implementation (Completed)
 **Architecture:** Standardise all REST error responses from the `ai-analyzer` service surface using RFC 7807 Problem Details. A centralised `GlobalExceptionHandler` maps domain, validation, and infrastructure exceptions to machine-readable `ProblemDetail` payloads. Stack traces and internal details are never leaked to the client.
 
 - [x] **Milestone 20 (Completed):** Implement `GlobalExceptionHandler` at `infrastructure/web/` extending `ResponseEntityExceptionHandler`. Handles `MethodArgumentNotValidException` (400 with field-level errors), `CallNotPermittedException` (503 Circuit Breaker open), and `AiAnalysisException` (502 upstream failure). Enabled `spring.mvc.problemdetails.enabled=true`. 83 tests passing.
+- [x] **Milestone 21 (Completed):** Implement REST Query Endpoint `GET /api/v1/analyses` — `AiAnalysisQueryController` with optional `namespace`/`podName` filtering, CQRS-lite read port (`AiAnalysisQueryPort`), `AiAnalysisView` read model, `OpenSearchAnalysisQueryAdapter`, `AiAnalysisResponse` DTO, and OpenAPI contract at `specs/openapi-ai-analyzer.v1.yaml`. 83 tests passing, no regression.
