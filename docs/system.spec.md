@@ -73,3 +73,8 @@ This milestone is transversal and applies to all existing services. It enforces 
 **Architecture:** Automate build verification and security scanning on every push/PR via GitHub Actions. The pipeline enforces compilation, full test suite execution, and filesystem vulnerability scanning using Trivy. All workflow actions are SHA-pinned (immutable references) following supply-chain security best practices.
 
 - [x] **Milestone 19 (Completed):** Configure GitHub Actions CI workflow at `.github/workflows/ci.yml` — SHA-pinned actions (checkout `v4.1.1`, setup-java `v4.2.1`, trivy-action `v0.18.0`), explicit minimal permissions (`contents: read`), Java 21 Temurin with Gradle cache, `./gradlew test --no-daemon`, and Trivy fs scan with `CRITICAL,HIGH` severity gate + `exit-code: 1` fail policy.
+
+### [ ] Phase 9 — API Contracts & RFC 7807 Implementation (In Progress)
+**Architecture:** Standardise all REST error responses from the `ai-analyzer` service surface using RFC 7807 Problem Details. A centralised `GlobalExceptionHandler` maps domain, validation, and infrastructure exceptions to machine-readable `ProblemDetail` payloads. Stack traces and internal details are never leaked to the client.
+
+- [x] **Milestone 20 (Completed):** Implement `GlobalExceptionHandler` at `infrastructure/web/` extending `ResponseEntityExceptionHandler`. Handles `MethodArgumentNotValidException` (400 with field-level errors), `CallNotPermittedException` (503 Circuit Breaker open), and `AiAnalysisException` (502 upstream failure). Enabled `spring.mvc.problemdetails.enabled=true`. 83 tests passing.
