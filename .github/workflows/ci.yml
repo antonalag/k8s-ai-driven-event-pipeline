@@ -10,8 +10,13 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  backend-pipeline:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' || 
+      contains(github.event.head_commit.modified, 'services/') ||
+      contains(github.event.head_commit.modified, 'build.gradle') ||
+      contains(github.event.head_commit.modified, 'specs/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
@@ -29,10 +34,51 @@ jobs:
       - name: Compile and run test suite
         run: ./gradlew test --no-daemon
 
-      - name: Trivy filesystem vulnerability scan
+      - name: Trivy backend filesystem vulnerability scan
         uses: aquasecurity/trivy-action@d9cd5b1c23aaf8cb31bb09141028215828364bbb  # v0.18.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+  frontend-pipeline:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.head_commit.modified, 'ui/') ||
+      contains(github.event.head_commit.modified, 'specs/')
+    defaults:
+      run:
+        working-directory: ./ui
+    permissions:
+      contents: read      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+        
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@60edb5dd545a775178f525247433877c973a203a  # v4.0.2
+        with:
+          node-version: '20' 
+          cache: 'npm'       
+          cache-dependency-path: './ui/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Compile Verification (Type-Checking)
+        run: npm run typecheck
+
+      - name: Code Linting Verification
+        run: npm run lint
+
+      - name: Execute Production Build
+        run: npm run build
+
+      - name: Trivy frontend filesystem vulnerability scan
+        uses: aquasecurity/trivy-action@d9cd5b1c23aaf8cb31bb09141028215828364bbb  # v0.18.0
+        with:
+          scan-type: 'fs'
+          scan-ref: './ui'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'

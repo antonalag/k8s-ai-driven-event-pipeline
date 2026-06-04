@@ -4,11 +4,13 @@
 Transform raw Kubernetes signals (events, Pod status changes) into structured, actionable knowledge through a contract-driven distributed pipeline and an AI reasoning layer.
 
 ## 2. Platform Layers (Macro Vision)
-The system will be built incrementally across 4 isolated, contract-backed layers:
+The system will be built incrementally across isolated, contract-backed layers:
 1. **Ingestion Layer (Phase 1):** Kubernetes Collector using local Informers written in Java/Spring Boot.
 2. **Streaming Layer (Phase 2):** Apache Kafka backbone for event routing and decoupling.
 3. **Intelligence Layer (Phase 3):** Structured AI Analyzer powered by Ollama.
 4. **Storage Layer (Phase 4):** OpenSearch persistence for AI analysis reports, enabling historical querying and observability dashboards.
+5. **Cross-Cutting & Resilience (Phases 5-10):** Clean Architecture, Context History, BYOK, Circuit Breakers, CI/CD pipelines, and RFC 7807 error surfaces.
+6. **Observability Interface Layer (Phase 11):** Real-time client dashboard built with React, TypeScript, and Tailwind CSS to monitor Pod states and AI diagnostic streams.
 
 ## 3. Non-Negotiable SDD Rules
 1. **Contract-First:** NO Java code shall be written without a prior data schema (JSON Schema / AsyncAPI) acting as a strict contract.
@@ -49,14 +51,14 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 10c:** Add unit tests for `OllamaAnalyzerService` covering: prompt construction, defensive markdown stripping, clean JSON parsing, and exception handling on malformed responses. All tests must pass green via `./gradlew clean build`.
 - [x] **Milestone 10d:** Add robust unit tests for `OllamaLanguageModelAdapter` covering: history prompt construction, defensive markdown stripping, malformed JSON parsing, and exception handling. All tests must pass green via `./gradlew clean build`.
 
-### ✅ Phase 5 — Intelligent Correlation & Context History (Completed)
+### ✅ Phase 6 — Intelligent Correlation & Context History (Completed)
 **Architecture:** Enhance the `services/ai-analyzer` reasoning layer to provide the AI model with operational memory. Before sending a `KubernetesEvent` to the AI provider, the system will query OpenSearch via the `AiAnalysisRepositoryPort` to retrieve previous analysis verdicts for the same Pod. This history will be injected into a new system prompt layout, allowing the LLM to cross-reference past failures, detect cascading regressions, and avoid redundant diagnostic steps (BYOK-ready contextual enrichment).
 
 - [x] **Milestone 11:** Update `system.spec.md` and design the prompt template configuration for historical context injection.
 - [x] **Milestone 12:** Adapt `AiLanguageModelPort` and `OllamaAnalyzerService` to orchestrate history retrieval and inject past verdicts into the reasoning pipeline.
 - [x] **Milestone 13:** Update the Ollama/BYOK infrastructure adapter to parse the history list and format it cleanly inside the LLM prompt without regression.
 
-### ✅ Phase 6 — Multi-Model Support & BYOK Strategy (Completed)
+### ✅ Phase 7 — Multi-Model Support & BYOK Strategy (Completed)
 **Architecture:** Decouple the intelligence layer from Ollama-specific configurations to allow seamless switching between local LLMs and cloud-based providers (OpenAI, Anthropic, or custom corporate endpoints) via API Keys (Bring Your Own Key). This introduces an agnostic AI routing configuration and a standard payload mapper.
 
 - [x] **Milestone 14:** Define a unified `@ConfigurationProperties` class in `config/` to register and validate all platform properties, eliminating unknown property warnings.
@@ -64,17 +66,17 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 16:** Implement the real HTTP client, Java 21 DTO records, payload mappers (`ByokPayloadMapper`, `ByokResponseExtractor`), and full `ByokLanguageModelAdapter` orchestration for external AI providers (OpenAI-compatible and custom endpoints) with defensive parsing and TDD coverage.
 - [x] **Milestone 17:** Dynamic AI Provider Routing — Orchestrate runtime selection between Ollama and BYOK adapters via `@ConditionalOnProperty(name = "platform.ai.provider")` on each `@Configuration` class. Removed `@Component` from all adapters (now POJOs instantiated by `@Bean` methods). Added `AiProviderValidator` with `@PostConstruct` fail-fast validation. Full PBT suite (jqwik) covering 7 correctness properties, ArchUnit tests enforcing domain purity, and integration tests validating mutual exclusivity of provider beans.
 
-### ✅ Phase 7 — Pipeline Resilience & Circuit Breaker (Completed)
+### ✅ Phase 8 — Pipeline Resilience & Circuit Breaker (Completed)
 **Architecture:** Protect the event consumption pipeline so that when the AI provider (Ollama or BYOK) fails due to network errors, timeouts, or rate limits (HTTP 429), the pipeline continues processing events. A Circuit Breaker + Fallback decorator wraps `AiLanguageModelPort` in the configuration layer, generating degraded `AiAnalysis` responses (verdict "DEGRADED") when the provider is unavailable. Domain purity is preserved — the service layer remains unaware of the resilience mechanism.
 
 - [x] **Milestone 18 (Completed):** Implement Circuit Breaker with Fallback — `ResilientAiLanguageModelAdapter` decorator wrapping `AiLanguageModelPort` via Resilience4j, `CircuitBreakerProperties` externalized configuration, `ResilienceConfig` with `@Primary` decorated bean, state transition logging, and full PBT suite (jqwik) covering 9 correctness properties. 83 tests passing.
 
-### ✅ Phase 8 — CI/CD Pipeline Setup (Completed)
+### ✅ Phase 9 — CI/CD Pipeline Setup (Completed)
 **Architecture:** Automate build verification and security scanning on every push/PR via GitHub Actions. The pipeline enforces compilation, full test suite execution, and filesystem vulnerability scanning using Trivy. All workflow actions are SHA-pinned (immutable references) following supply-chain security best practices.
 
 - [x] **Milestone 19 (Completed):** Configure GitHub Actions CI workflow at `.github/workflows/ci.yml` — SHA-pinned actions (checkout `v4.1.1`, setup-java `v4.2.1`, trivy-action `v0.18.0`), explicit minimal permissions (`contents: read`), Java 21 Temurin with Gradle cache, `./gradlew test --no-daemon`, and Trivy fs scan with `CRITICAL,HIGH` severity gate + `exit-code: 1` fail policy.
 
-### ✅ Phase 9 — API Contracts & RFC 7807 Implementation (Completed)
+### ✅ Phase 10 — API Contracts & RFC 7807 Implementation (Completed)
 **Architecture:** Standardise all REST error responses from the `ai-analyzer` service surface using RFC 7807 Problem Details. A centralised `GlobalExceptionHandler` maps domain, validation, and infrastructure exceptions to machine-readable `ProblemDetail` payloads. Stack traces and internal details are never leaked to the client.
 
 - [x] **Milestone 20 (Completed):** Implement `GlobalExceptionHandler` at `infrastructure/web/` extending `ResponseEntityExceptionHandler`. Handles `MethodArgumentNotValidException` (400 with field-level errors), `CallNotPermittedException` (503 Circuit Breaker open), and `AiAnalysisException` (502 upstream failure). Enabled `spring.mvc.problemdetails.enabled=true`. 83 tests passing.
