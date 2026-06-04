@@ -81,3 +81,10 @@ This milestone is transversal and applies to all existing services. It enforces 
 
 - [x] **Milestone 20 (Completed):** Implement `GlobalExceptionHandler` at `infrastructure/web/` extending `ResponseEntityExceptionHandler`. Handles `MethodArgumentNotValidException` (400 with field-level errors), `CallNotPermittedException` (503 Circuit Breaker open), and `AiAnalysisException` (502 upstream failure). Enabled `spring.mvc.problemdetails.enabled=true`. 83 tests passing.
 - [x] **Milestone 21 (Completed):** Implement REST Query Endpoint `GET /api/v1/analyses` — `AiAnalysisQueryController` with optional `namespace`/`podName` filtering, CQRS-lite read port (`AiAnalysisQueryPort`), `AiAnalysisView` read model, `OpenSearchAnalysisQueryAdapter`, `AiAnalysisResponse` DTO, and OpenAPI contract at `specs/openapi-ai-analyzer.v1.yaml`. 83 tests passing, no regression.
+
+### ⏳ Phase 11 — Observability Interface Layer (In Progress)
+**Architecture:** Initialize a completely decoupled, client-side single-page application (SPA) under the `ui/` directory using React, TypeScript, and Vite. The application will leverage Tailwind CSS and Shadcn/ui primitives for styling, and TanStack Query (React Query) to handle server-state fetching and polling from the `services/ai-analyzer` REST surface (`GET /api/v1/analyses`). The UI will be containerized using a minimal multi-stage Dockerfile based on Nginx to serve the static assets.
+
+- [ ] **Milestone 22:** Initialize the `ui/` module scaffolding with Vite + React + TypeScript, configuring strict compiler options (`noImplicitAny: true`) and package automation scripts matching the CI workflow pipeline (`npm run typecheck`, `npm run lint`, `npm run build`).
+- [ ] **Milestone 23:** Configure code style standards and quality gates locally, setting up ESLint rules and Tailwind CSS utility class isolation to prevent styling pollution.
+- [ ] **Milestone 24:** Create the containerization blueprint at `ui/Dockerfile` utilizing a secure multi-stage build layout (compilation step via Node 20 + execution step via minimal non-root Nginx alpine image with custom single-page routing properties).
