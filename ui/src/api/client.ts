@@ -1,4 +1,5 @@
 import type { AiAnalysisResponse, ProblemDetail } from '../types/api';
+import { parseProblemDetail } from './parseProblemDetail';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -47,7 +48,7 @@ export async function fetchAnalyses(params?: QueryParams): Promise<AiAnalysisRes
   if (!response.ok) {
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/problem+json')) {
-      const problem: ProblemDetail = await response.json();
+      const problem: ProblemDetail = parseProblemDetail(await response.json());
       throw new ApiError(problem);
     }
     throw new ApiError({ status: response.status, title: 'Unknown Error' });
