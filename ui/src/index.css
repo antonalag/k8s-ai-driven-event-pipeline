@@ -1,3 +1,73 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  /* AI glow effect — violet box-shadow for AI panels */
+  .ai-glow {
+    box-shadow: 0px 4px 20px rgba(167, 139, 250, 0.12);
+  }
+
+  /* Panel depth — surface-container background with outline-variant border */
+  .panel-depth {
+    background-color: #1a211d;
+    border: 1px solid #3c4a42;
+  }
+
+  /* AI panel depth — deep violet background with semi-transparent violet border */
+  .ai-panel-depth {
+    background-color: #1e1b2e;
+    border: 1px solid rgba(167, 139, 250, 0.3);
+  }
+
+  /* Navigation active state — primary-tinted left border and gradient background */
+  .nav-item-active {
+    background: linear-gradient(90deg, rgba(78, 222, 163, 0.1) 0%, transparent 100%);
+    border-left: 3px solid #4edea3;
+    color: #4edea3;
+  }
+}
+
+/* Thin scrollbar styles — 6px width, transparent track, outline-variant thumb */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3c4a42;
+  border-radius: 10px;
+}
+
+/* Shimmer mask — sweeping gradient pseudo-element animation */
+.shimmer-mask {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-mask::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 2s linear infinite;
+}
+
+/* Cursor blink — blinking underscore pseudo-element */
+.cursor-blink::after {
+  content: '_';
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
