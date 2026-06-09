@@ -10,7 +10,8 @@ The system will be built incrementally across isolated, contract-backed layers:
 3. **Intelligence Layer (Phase 3):** Structured AI Analyzer powered by Ollama.
 4. **Storage Layer (Phase 4):** OpenSearch persistence for AI analysis reports, enabling historical querying and observability dashboards.
 5. **Cross-Cutting & Resilience (Phases 5-10):** Clean Architecture, Context History, BYOK, Circuit Breakers, CI/CD pipelines, and RFC 7807 error surfaces.
-6. **Observability Interface Layer (Phase 11):** Real-time client dashboard built with React, TypeScript, and Tailwind CSS to monitor Pod states and AI diagnostic streams.
+6. **Observability Interface Layer (Phase 11 & 12):** Real-time client dashboard shell built with React, TypeScript, and Tailwind CSS, fully covered by TDD unit and property-based testing (fast-check).
+7. **Live Data Integration (Phase 13):**: Dynamic frontend-backend synchronization utilizing TanStack Query for real-time polling, DTO contract mapping, and defensive RFC 7807 error handling. 
 
 ## 3. Non-Negotiable SDD Rules
 1. **Contract-First:** NO Java code shall be written without a prior data schema (JSON Schema / AsyncAPI) acting as a strict contract.
@@ -94,3 +95,8 @@ This milestone is transversal and applies to all existing services. It enforces 
 **Architecture:** Established a rigorous testing infrastructure for the `ui/` module using Vitest as the test runner, fast-check for property-based testing (PBT), and Testing Library for component assertions. Quality gates enforce type-safety, lint compliance, and successful production builds in CI.
 
 - [x] **Milestone 26 (Completed):** TDD & PBT Quality Gates — Configured Vitest + fast-check + Testing Library test harness, defined 4 correctness properties (navigation exclusivity, log entry structural completeness, severity-driven visual treatment, ProblemDetail field rendering), implemented property-based and example-based test suites covering all dashboard components (Sidebar, TopBar, LogViewer, AIDiagnosisPanel, App Shell), and validated all quality gates (`npm run typecheck`, `npm run lint`, `npm run build`). 73 tests passing.
+
+### Phase 13 — Frontend-Backend Live Data Integration
+- [ ] **Milestone 27:** Design the connection architecture between the `ui/` module and the `services/ai-analyzer` REST endpoint (`GET /api/v1/analyses`).
+- [ ] **Milestone 28:** Implement TanStack Query polling integration to fetch live analysis data at a 5-second interval.
+- [ ] **Milestone 29:** Map the backend `AiAnalysisResponse` DTO contract to frontend TypeScript display models.

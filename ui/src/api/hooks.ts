@@ -8,12 +8,15 @@ interface AnalysesQueryParams {
 }
 
 /**
- * TanStack Query hook for fetching AI analyses.
- * Refetches automatically when params change.
+ * TanStack Query hook for fetching AI analyses with real-time polling.
+ * Polls every 5 seconds while the browser tab is visible.
+ * Pauses polling when the tab is hidden.
  */
 export function useAnalyses(params?: AnalysesQueryParams) {
   return useQuery<AiAnalysisResponse[], ApiError>({
     queryKey: ['analyses', params],
     queryFn: () => fetchAnalyses(params),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
   });
 }

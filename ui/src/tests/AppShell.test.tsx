@@ -1,20 +1,63 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { render, cleanup, waitFor } from '@testing-library/react';
 import App from '../App';
+import { createQueryWrapper } from '../test-utils/queryWrapper';
 
 /**
  * Unit tests for App Shell composition
  * Validates: Requirements 7.1, 8.5
  */
 
+const MOCK_ANALYSES = [
+  {
+    podName: 'ai-analyzer',
+    namespace: 'default',
+    verdict: 'CRITICAL_FAILURE' as const,
+    rootCauseAnalysis: 'DNS resolution failure detected for postgresql-master.',
+    recommendedActions: ['kubectl rollout restart deploy db-worker'],
+    analyzedAt: new Date().toISOString(),
+  },
+  {
+    podName: 'web-server',
+    namespace: 'default',
+    verdict: 'HEALTHY' as const,
+    rootCauseAnalysis: 'All systems operating normally.',
+    recommendedActions: [],
+    analyzedAt: new Date(Date.now() - 60000).toISOString(),
+  },
+];
+
+beforeEach(() => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(MOCK_ANALYSES), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  );
+});
+
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
+
+function renderApp() {
+  const Wrapper = createQueryWrapper();
+  return render(
+    <Wrapper>
+      <App />
+    </Wrapper>,
+  );
+}
 
 describe('App Shell composition', () => {
   describe('Requirement 8.5: All utility classes use kd- prefix', () => {
-    it('all Tailwind utility classes in the App Shell use the kd- prefix', () => {
-      const { container } = render(<App />);
+    it('all Tailwind utility classes in the App Shell use the kd- prefix', async () => {
+      const { container } = renderApp();
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+      });
 
       // Collect all class attributes from all elements in the rendered App Shell
       const allElements = container.querySelectorAll('[class]');
@@ -57,8 +100,13 @@ describe('App Shell composition', () => {
       });
     });
 
-    it('root container uses kd- prefixed classes only', () => {
-      const { container } = render(<App />);
+    it('root container uses kd- prefixed classes only', async () => {
+      const { container } = renderApp();
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+      });
+
       const rootDiv = container.firstElementChild as HTMLElement;
 
       const classes = rootDiv.className.split(/\s+/);
@@ -71,15 +119,21 @@ describe('App Shell composition', () => {
   });
 
   describe('Requirement 7.1: Staggered reveal animation delays', () => {
-    it('content panels have kd-animate-reveal class', () => {
-      const { container } = render(<App />);
+    it('content panels have kd-animate-reveal class', async () => {
+      const { container } = renderApp();
 
-      const revealPanels = container.querySelectorAll('.kd-animate-reveal');
-      expect(revealPanels.length).toBeGreaterThanOrEqual(2);
+      await waitFor(() => {
+        const revealPanels = container.querySelectorAll('.kd-animate-reveal');
+        expect(revealPanels.length).toBeGreaterThanOrEqual(2);
+      });
     });
 
-    it('panels have incremental animation delay values', () => {
-      const { container } = render(<App />);
+    it('panels have incremental animation delay values', async () => {
+      const { container } = renderApp();
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+      });
 
       const revealPanels = container.querySelectorAll('.kd-animate-reveal');
       const delays: number[] = [];
@@ -101,8 +155,12 @@ describe('App Shell composition', () => {
       }
     });
 
-    it('panels have animationFillMode set to backwards for reveal effect', () => {
-      const { container } = render(<App />);
+    it('panels have animationFillMode set to backwards for reveal effect', async () => {
+      const { container } = renderApp();
+
+      await waitFor(() => {
+        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+      });
 
       const revealPanels = container.querySelectorAll('.kd-animate-reveal');
 
@@ -114,47 +172,50 @@ describe('App Shell composition', () => {
   });
 
   describe('Requirement 7.1: CSS Grid layout has 12-column and 6-row configuration', () => {
-    it('content grid has kd-grid-cols-12 class for 12-column layout', () => {
-      const { container } = render(<App />);
+    it('content grid has kd-grid-cols-12 class for 12-column layout', async () => {
+      const { container } = renderApp();
 
-      const gridElement = container.querySelector('.kd-grid-cols-12');
-      expect(gridElement).not.toBeNull();
+      await waitFor(() => {
+        expect(container.querySelector('.kd-grid-cols-12')).not.toBeNull();
+      });
     });
 
-    it('content grid has kd-grid-rows-6 class for 6-row layout', () => {
-      const { container } = render(<App />);
+    it('content grid has kd-grid-rows-6 class for 6-row layout', async () => {
+      const { container } = renderApp();
 
-      const gridElement = container.querySelector('.kd-grid-rows-6');
-      expect(gridElement).not.toBeNull();
+      await waitFor(() => {
+        expect(container.querySelector('.kd-grid-rows-6')).not.toBeNull();
+      });
     });
 
-    it('content grid uses kd-grid class', () => {
-      const { container } = render(<App />);
+    it('content grid uses kd-grid class', async () => {
+      const { container } = renderApp();
 
-      const gridElement = container.querySelector('.kd-grid');
-      expect(gridElement).not.toBeNull();
+      await waitFor(() => {
+        expect(container.querySelector('.kd-grid')).not.toBeNull();
+      });
     });
 
-    it('LogViewer panel spans 12 columns and 3 rows within the content grid', () => {
-      const { container } = render(<App />);
+    it('LogViewer panel spans 12 columns and 3 rows within the content grid', async () => {
+      const { container } = renderApp();
 
-      const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
-      expect(gridElement).not.toBeNull();
-
-      // Direct children of the grid should have col-span-12 and row-span-3
-      const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
-      expect(directPanels.length).toBeGreaterThanOrEqual(1);
+      await waitFor(() => {
+        const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
+        expect(gridElement).not.toBeNull();
+        const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
+        expect(directPanels.length).toBeGreaterThanOrEqual(1);
+      });
     });
 
-    it('content grid direct children are the two main panels', () => {
-      const { container } = render(<App />);
+    it('content grid direct children are the two main panels', async () => {
+      const { container } = renderApp();
 
-      const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
-      expect(gridElement).not.toBeNull();
-
-      // Both direct children of the grid should span full width and 3 rows
-      const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
-      expect(directPanels.length).toBe(2);
+      await waitFor(() => {
+        const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
+        expect(gridElement).not.toBeNull();
+        const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
+        expect(directPanels.length).toBe(2);
+      });
     });
   });
 });
