@@ -1,0 +1,85 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Global Platform Orchestration — Phase 14 / Milestone 31
+#
+# Unified Docker Compose manifest integrating all platform services.
+# Includes: Kafka (KRaft), AI Analyzer (Spring Boot), Observability UI (Nginx)
+#
+# Usage:
+#   docker compose -f deployments/docker-compose.yaml up -d
+#   docker compose -f deployments/docker-compose.yaml down -v
+# ──────────────────────────────────────────────────────────────────────────────
+
+include:
+  - path: docker-compose/docker-compose.yml
+
+services:
+  ai-analyzer:
+    build:
+      context: ../
+      dockerfile: services/ai-analyzer/Dockerfile
+    container_name: ai-analyzer
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - platform-net
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/logs
+    security_opt:
+      - no-new-privileges:true
+    user: "1000:1000"
+
+  observability-ui:
+    build:
+      context: ../ui
+      dockerfile: Dockerfile
+    container_name: observability-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      ai-analyzer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/healthz || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - platform-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /var/log/nginx
+      - /run
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  platform-net:
+    driver: bridge

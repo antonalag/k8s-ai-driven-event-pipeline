@@ -12,6 +12,7 @@ The system will be built incrementally across isolated, contract-backed layers:
 5. **Cross-Cutting & Resilience (Phases 5-10):** Clean Architecture, Context History, BYOK, Circuit Breakers, CI/CD pipelines, and RFC 7807 error surfaces.
 6. **Observability Interface Layer (Phase 11 & 12):** Real-time client dashboard shell built with React, TypeScript, and Tailwind CSS, fully covered by TDD unit and property-based testing (fast-check).
 7. **Live Data Integration (Phase 13):**: Dynamic frontend-backend synchronization utilizing TanStack Query for real-time polling, DTO contract mapping, and defensive RFC 7807 error handling. 
+8. **Frontend Containerization & Global Orchestration (Phase 14):** Unified Docker Compose orchestration integrating all platform services (Kafka, ai-analyzer, observability-ui) with shared `platform-net` network, zero-CORS Nginx reverse-proxy, SHA-256 supply-chain pinning, and defense-in-depth container hardening.
 
 ## 3. Non-Negotiable SDD Rules
 1. **Contract-First:** NO Java code shall be written without a prior data schema (JSON Schema / AsyncAPI) acting as a strict contract.
@@ -96,7 +97,14 @@ This milestone is transversal and applies to all existing services. It enforces 
 
 - [x] **Milestone 26 (Completed):** TDD & PBT Quality Gates — Configured Vitest + fast-check + Testing Library test harness, defined 4 correctness properties (navigation exclusivity, log entry structural completeness, severity-driven visual treatment, ProblemDetail field rendering), implemented property-based and example-based test suites covering all dashboard components (Sidebar, TopBar, LogViewer, AIDiagnosisPanel, App Shell), and validated all quality gates (`npm run typecheck`, `npm run lint`, `npm run build`). 73 tests passing.
 
-### Phase 13 — Frontend-Backend Live Data Integration
-- [ ] **Milestone 27:** Design the connection architecture between the `ui/` module and the `services/ai-analyzer` REST endpoint (`GET /api/v1/analyses`).
-- [ ] **Milestone 28:** Implement TanStack Query polling integration to fetch live analysis data at a 5-second interval.
-- [ ] **Milestone 29:** Map the backend `AiAnalysisResponse` DTO contract to frontend TypeScript display models.
+### ✅ Phase 13 — Frontend-Backend Live Data Integration (Completed)
+- [x] **Milestone 27:** Design the connection architecture between the `ui/` module and the `services/ai-analyzer` REST endpoint (`GET /api/v1/analyses`).
+- [x] **Milestone 28:** Implement TanStack Query polling integration to fetch live analysis data at a 5-second interval.
+- [x] **Milestone 29:** Map the backend `AiAnalysisResponse` DTO contract to frontend TypeScript display models.
+
+### ✅ Phase 14 — Frontend Containerization & Global Orchestration (Completed)
+**Architecture:** Validate and harden the existing containerized React SPA, create a unified Docker Compose orchestration file integrating all platform services (Kafka, ai-analyzer, observability-ui) with shared networking, and establish zero-CORS containerized operation via Nginx reverse-proxy with secure cross-origin fallback for local development.
+
+- [x] **Milestone 30:** Validate and harden the `ui/Dockerfile` multi-stage build pipeline (Node 20 Alpine → Nginx 1.27 Alpine) with SHA-256 pinning, non-root execution, and SPA routing configuration.
+- [x] **Milestone 31:** Create unified `deployments/docker-compose.yaml` orchestrating all platform services (Kafka, ai-analyzer, observability-ui) with shared `platform-net` network, healthcheck chains, and security hardening.
+- [x] **Milestone 32:** Implement CORS fallback configuration and Nginx reverse-proxy for `/api/` path, ensuring zero-CORS containerized operation and secure cross-origin fallback for local development.

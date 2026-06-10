@@ -54,6 +54,13 @@ Thumbs.db
 .jqwik-database
 
 # ──────────────────────────────────────────
+# Scripts — generated output files
+# ──────────────────────────────────────────
+scripts/*.txt
+scripts/*.out
+scripts/*.log
+
+# ──────────────────────────────────────────
 # Frontend (Node / React / Vite)
 # ──────────────────────────────────────────
 **/node_modules/

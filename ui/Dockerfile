@@ -1,3 +1,16 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Phase 14 Compliance Audit — PASSED
+#
+# ✅ Node 20 Alpine SHA-256 pinned (build stage)
+# ✅ Nginx 1.27 Alpine SHA-256 pinned (runtime stage)
+# ✅ Deterministic install: npm ci
+# ✅ Non-root execution: USER nginx (UID 101)
+# ✅ Read-only static assets: 444 (files), 555 (directories)
+# ✅ SPA fallback routing: try_files → /index.html
+# ✅ Healthcheck: /healthz (30s interval, 3s timeout, 3 retries)
+# ✅ No source/node_modules in runtime stage
+# ──────────────────────────────────────────────────────────────────────────────
+
 # Stage 1: Build — Node 20 Alpine with SHA-256 pinned digest
 FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
 
