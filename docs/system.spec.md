@@ -13,6 +13,7 @@ The system will be built incrementally across isolated, contract-backed layers:
 6. **Observability Interface Layer (Phase 11 & 12):** Real-time client dashboard shell built with React, TypeScript, and Tailwind CSS, fully covered by TDD unit and property-based testing (fast-check).
 7. **Live Data Integration (Phase 13):**: Dynamic frontend-backend synchronization utilizing TanStack Query for real-time polling, DTO contract mapping, and defensive RFC 7807 error handling. 
 8. **Frontend Containerization & Global Orchestration (Phase 14):** Unified Docker Compose orchestration integrating all platform services (Kafka, ai-analyzer, observability-ui) with shared `platform-net` network, zero-CORS Nginx reverse-proxy, SHA-256 supply-chain pinning, and defense-in-depth container hardening.
+9. **Advanced Intelligence via MCP (Phase 15):** Model Context Protocol intelligence layer introducing a dedicated MCP Server container as a semantic firewall for read-only Kubernetes cluster context, a native MCP Client in the ai-analyzer with circuit breaker resilience, and enriched three-section prompt construction combining failure events, historical analysis, and live cluster state.
 
 ## 3. Non-Negotiable SDD Rules
 1. **Contract-First:** NO Java code shall be written without a prior data schema (JSON Schema / AsyncAPI) acting as a strict contract.
@@ -108,3 +109,10 @@ This milestone is transversal and applies to all existing services. It enforces 
 - [x] **Milestone 30:** Validate and harden the `ui/Dockerfile` multi-stage build pipeline (Node 20 Alpine → Nginx 1.27 Alpine) with SHA-256 pinning, non-root execution, and SPA routing configuration.
 - [x] **Milestone 31:** Create unified `deployments/docker-compose.yaml` orchestrating all platform services (Kafka, ai-analyzer, observability-ui) with shared `platform-net` network, healthcheck chains, and security hardening.
 - [x] **Milestone 32:** Implement CORS fallback configuration and Nginx reverse-proxy for `/api/` path, ensuring zero-CORS containerized operation and secure cross-origin fallback for local development.
+
+### ⏳ Phase 15 — Advanced Intelligence via Model Context Protocol (MCP)
+**Architecture:** Introduce an MCP Server as a semantic firewall that exposes curated, read-only Kubernetes cluster context (pod descriptions, events, container logs) via JSON-RPC 2.0 over HTTP. The existing `ai-analyzer` service is extended with a native MCP Client adapter that interrogates the MCP Server for enriched context before constructing the final LLM prompt, combining three data sources — the original Kafka failure event, historical analysis from OpenSearch, and live cluster state from MCP — into a single reasoning payload for significantly deeper root-cause analysis.
+
+- [ ] **Milestone 33:** MCP Server container and tool implementation — Node.js TypeScript MCP Server exposing read-only tools (describe_pod, get_events, get_logs) via JSON-RPC 2.0, with tool whitelisting, mock mode for local development, SHA-256 pinned container, and security hardening.
+- [ ] **Milestone 34:** Spring Boot MCP Client integration with circuit breaker — McpContextPort domain port, McpClientAdapter infrastructure adapter using RestClient for JSON-RPC communication, dedicated mcpCircuitBreaker (Resilience4j) with degraded mode fallback.
+- [ ] **Milestone 35:** Enriched diagnostic flow and prompt construction — Extended OllamaAnalyzerService orchestration, three-section prompt (event + history + MCP context) with priority-based truncation, additive AiAnalysis fields (mcpToolsUsed, mcpContextAvailable), backward-compatible Kafka serialization.

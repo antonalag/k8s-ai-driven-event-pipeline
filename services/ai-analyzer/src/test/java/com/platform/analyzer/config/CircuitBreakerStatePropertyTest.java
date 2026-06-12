@@ -63,8 +63,8 @@ class CircuitBreakerStatePropertyTest {
         failuresNeeded = Math.min(failuresNeeded, windowSize);
         int successes = windowSize - failuresNeeded;
 
-        AiLanguageModelPort successDelegate = (e, h) -> SUCCESS_ANALYSIS;
-        AiLanguageModelPort failDelegate = (e, h) -> {
+        AiLanguageModelPort successDelegate = (e, h, c) -> SUCCESS_ANALYSIS;
+        AiLanguageModelPort failDelegate = (e, h, c) -> {
             throw new AiAnalysisException("simulated failure");
         };
 

@@ -3,9 +3,11 @@ package com.platform.analyzer.infrastructure.client.ollama;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.service.PromptTruncator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.HttpClientErrorException;
@@ -13,6 +15,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,25 +70,36 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
     private final ObjectMapper objectMapper;
     private final String model;
     private final String baseUrl;
+    private final PromptTruncator promptTruncator;
 
     public OllamaLanguageModelAdapter(
             RestClient ollamaRestClient,
             ObjectMapper objectMapper,
             String model,
             String baseUrl) {
+        this(ollamaRestClient, objectMapper, model, baseUrl, new PromptTruncator(65536));
+    }
+
+    public OllamaLanguageModelAdapter(
+            RestClient ollamaRestClient,
+            ObjectMapper objectMapper,
+            String model,
+            String baseUrl,
+            PromptTruncator promptTruncator) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
         this.model = model;
         this.baseUrl = baseUrl;
+        this.promptTruncator = promptTruncator;
     }
 
     @Override
-    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history) {
-        String prompt = buildPrompt(event, history);
+    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history, EnrichedContext context) {
+        String prompt = buildPrompt(event, history, context);
         OllamaRequest request = new OllamaRequest(model, prompt, false);
 
-        log.debug("Sending event for pod '{}' to Ollama model '{}' with {} history records",
-                event.podName(), model, history.size());
+        log.debug("Sending event for pod '{}' to Ollama model '{}' with {} history records, mcpContext={}",
+                event.podName(), model, history.size(), context != null && context.hasContent());
 
         OllamaResponse ollamaResponse = callOllama(request);
 
@@ -94,7 +108,15 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
                     "Ollama returned a null or empty response for pod: " + event.podName());
         }
 
-        return parseAnalysis(ollamaResponse.response(), event.podName());
+        AiAnalysis parsed = parseAnalysis(ollamaResponse.response(), event.podName());
+
+        boolean contextAvailable = context != null && context.hasContent();
+        List<String> toolsUsed = contextAvailable ? context.toolsUsed() : List.of();
+
+        return new AiAnalysis(
+                parsed.podName(), parsed.namespace(), parsed.verdict(),
+                parsed.rootCauseAnalysis(), parsed.recommendedActions(),
+                toolsUsed, contextAvailable);
     }
 
     protected OllamaResponse callOllama(OllamaRequest request) {
@@ -120,7 +142,7 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
         return baseUrl;
     }
 
-    String buildPrompt(KubernetesEvent event, List<AiAnalysis> history) {
+    String buildPrompt(KubernetesEvent event, List<AiAnalysis> history, EnrichedContext context) {
         String historyContext;
         if (history == null || history.isEmpty()) {
             historyContext = "No previous analysis records found for this pod.";
@@ -131,13 +153,53 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
                     .collect(Collectors.joining("\n"));
         }
 
-        return SYSTEM_PROMPT_TEMPLATE.formatted(
+        String basePrompt = SYSTEM_PROMPT_TEMPLATE.formatted(
                 historyContext,
                 event.podName(),
                 event.namespace(),
                 event.status(),
                 event.timestamp()
         );
+
+        if (context == null || !context.hasContent()) {
+            return basePrompt;
+        }
+
+        int basePromptBytes = basePrompt.getBytes(StandardCharsets.UTF_8).length;
+        EnrichedContext truncatedContext = promptTruncator.truncateIfNeeded(basePromptBytes, context);
+
+        if (truncatedContext == null || !truncatedContext.hasContent()) {
+            return basePrompt;
+        }
+
+        return basePrompt + "\n" + buildMcpContextSection(truncatedContext);
+    }
+
+    /**
+     * Legacy overload for backward compatibility with existing tests.
+     */
+    String buildPrompt(KubernetesEvent event, List<AiAnalysis> history) {
+        return buildPrompt(event, history, EnrichedContext.EMPTY);
+    }
+
+    static String buildMcpContextSection(EnrichedContext context) {
+        var sb = new StringBuilder();
+        sb.append("=== CLUSTER CONTEXT (MCP) ===\n");
+
+        if (context.podDescription() != null) {
+            sb.append("\n--- POD DESCRIPTION ---\n");
+            sb.append(context.podDescription()).append("\n");
+        }
+        if (context.podEvents() != null) {
+            sb.append("\n--- EVENTS ---\n");
+            sb.append(context.podEvents()).append("\n");
+        }
+        if (context.podLogs() != null) {
+            sb.append("\n--- LOGS ---\n");
+            sb.append(context.podLogs()).append("\n");
+        }
+
+        return sb.toString();
     }
 
     AiAnalysis parseAnalysis(String rawResponse, String podName) {

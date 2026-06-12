@@ -1,11 +1,14 @@
 package com.platform.analyzer.infrastructure.client.byok;
 
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.infrastructure.client.byok.dto.CustomProviderRequest;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiMessage;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiRequest;
+import com.platform.analyzer.service.PromptTruncator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,20 +59,39 @@ public class ByokPayloadMapper {
             Respond with the JSON object only.
             """;
 
+    private final PromptTruncator promptTruncator;
+
+    public ByokPayloadMapper() {
+        this(new PromptTruncator(65536));
+    }
+
+    public ByokPayloadMapper(PromptTruncator promptTruncator) {
+        this.promptTruncator = promptTruncator;
+    }
+
     /**
-     * Builds the request body for the given provider type.
+     * Builds the request body for the given provider type with enriched MCP context.
      *
      * @return an {@link OpenAiRequest} or {@link CustomProviderRequest} depending on the provider type
      */
     public Object buildRequestBody(
             KubernetesEvent event,
             List<AiAnalysis> history,
+            EnrichedContext context,
             String model,
             ProviderType providerType) {
 
         String historyContext = formatHistoryContext(history);
         String systemPrompt = SYSTEM_PROMPT_TEMPLATE.formatted(historyContext);
         String userContent = formatUserContent(event);
+
+        if (context != null && context.hasContent()) {
+            int basePromptBytes = (systemPrompt + "\n" + userContent).getBytes(StandardCharsets.UTF_8).length;
+            EnrichedContext truncatedContext = promptTruncator.truncateIfNeeded(basePromptBytes, context);
+            if (truncatedContext != null && truncatedContext.hasContent()) {
+                userContent = userContent + "\n" + buildMcpContextSection(truncatedContext);
+            }
+        }
 
         return switch (providerType) {
             case OPENAI_COMPATIBLE -> new OpenAiRequest(model, List.of(
@@ -78,6 +100,17 @@ public class ByokPayloadMapper {
             ));
             case CUSTOM -> new CustomProviderRequest(model, systemPrompt + "\n" + userContent, false);
         };
+    }
+
+    /**
+     * Legacy overload for backward compatibility.
+     */
+    public Object buildRequestBody(
+            KubernetesEvent event,
+            List<AiAnalysis> history,
+            String model,
+            ProviderType providerType) {
+        return buildRequestBody(event, history, EnrichedContext.EMPTY, model, providerType);
     }
 
     String formatHistoryContext(List<AiAnalysis> history) {
@@ -97,5 +130,25 @@ public class ByokPayloadMapper {
                 event.status(),
                 event.timestamp()
         );
+    }
+
+    static String buildMcpContextSection(EnrichedContext context) {
+        var sb = new StringBuilder();
+        sb.append("=== CLUSTER CONTEXT (MCP) ===\n");
+
+        if (context.podDescription() != null) {
+            sb.append("\n--- POD DESCRIPTION ---\n");
+            sb.append(context.podDescription()).append("\n");
+        }
+        if (context.podEvents() != null) {
+            sb.append("\n--- EVENTS ---\n");
+            sb.append(context.podEvents()).append("\n");
+        }
+        if (context.podLogs() != null) {
+            sb.append("\n--- LOGS ---\n");
+            sb.append(context.podLogs()).append("\n");
+        }
+
+        return sb.toString();
     }
 }

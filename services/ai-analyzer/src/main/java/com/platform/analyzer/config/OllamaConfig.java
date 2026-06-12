@@ -3,6 +3,7 @@ package com.platform.analyzer.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
 import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
+import com.platform.analyzer.service.PromptTruncator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,7 +17,7 @@ import org.springframework.web.client.RestClient;
  */
 @Configuration
 @ConditionalOnProperty(name = "platform.ai.provider", havingValue = "ollama")
-@EnableConfigurationProperties(PlatformProperties.class)
+@EnableConfigurationProperties({PlatformProperties.class, McpProperties.class})
 public class OllamaConfig {
 
     @Value("${ollama.api.url}")
@@ -35,7 +36,9 @@ public class OllamaConfig {
     AiLanguageModelPort aiLanguageModelPort(
             RestClient ollamaRestClient,
             ObjectMapper objectMapper,
+            McpProperties mcpProperties,
             @Value("${ollama.model}") String model) {
-        return new OllamaLanguageModelAdapter(ollamaRestClient, objectMapper, model, ollamaApiUrl);
+        PromptTruncator truncator = new PromptTruncator(mcpProperties.maxPromptBytes());
+        return new OllamaLanguageModelAdapter(ollamaRestClient, objectMapper, model, ollamaApiUrl, truncator);
     }
 }

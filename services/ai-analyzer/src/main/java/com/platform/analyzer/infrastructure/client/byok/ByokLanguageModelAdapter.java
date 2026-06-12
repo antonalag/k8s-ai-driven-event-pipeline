@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.config.ByokProperties;
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
@@ -45,13 +46,14 @@ public class ByokLanguageModelAdapter implements AiLanguageModelPort {
     }
 
     @Override
-    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history) {
-        log.debug("BYOK analysis for pod '{}' using model '{}' with {} history records",
-                event.podName(), properties.model(), history.size());
+    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history, EnrichedContext context) {
+        log.debug("BYOK analysis for pod '{}' using model '{}' with {} history records, mcpContext={}",
+                event.podName(), properties.model(), history.size(),
+                context != null && context.hasContent());
 
-        // 1. Build request body per provider type
+        // 1. Build request body per provider type (with enriched context)
         Object requestBody = payloadMapper.buildRequestBody(
-                event, history, properties.model(), properties.providerType());
+                event, history, context, properties.model(), properties.providerType());
 
         // 2. HTTP POST to the external provider
         String responseBody = callProvider(requestBody);
@@ -61,7 +63,16 @@ public class ByokLanguageModelAdapter implements AiLanguageModelPort {
                 responseBody, properties.providerType());
 
         // 4. Defensive parse into AiAnalysis
-        return parseAnalysis(rawContent, event.podName());
+        AiAnalysis parsed = parseAnalysis(rawContent, event.podName());
+
+        // 5. Populate Phase 15 metadata fields (LLM doesn't produce these)
+        boolean contextAvailable = context != null && context.hasContent();
+        List<String> toolsUsed = contextAvailable ? context.toolsUsed() : List.of();
+
+        return new AiAnalysis(
+                parsed.podName(), parsed.namespace(), parsed.verdict(),
+                parsed.rootCauseAnalysis(), parsed.recommendedActions(),
+                toolsUsed, contextAvailable);
     }
 
     protected String callProvider(Object requestBody) {

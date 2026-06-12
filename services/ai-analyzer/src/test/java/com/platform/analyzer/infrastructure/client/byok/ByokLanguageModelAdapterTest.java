@@ -3,6 +3,7 @@ package com.platform.analyzer.infrastructure.client.byok;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.config.ByokProperties;
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.model.PodPhase;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
@@ -77,7 +78,7 @@ class ByokLanguageModelAdapterTest {
 
     @Test
     void analyze_successfulInvocation_returnsAiAnalysis() {
-        when(payloadMapper.buildRequestBody(any(), any(), anyString(), any()))
+        when(payloadMapper.buildRequestBody(any(), any(), any(), anyString(), any()))
                 .thenReturn("mock-body");
         stubFullChain("raw-provider-response");
         when(responseExtractor.extractContent(anyString(), any()))
@@ -93,7 +94,7 @@ class ByokLanguageModelAdapterTest {
 
     @Test
     void analyze_httpClientError_throwsAiAnalysisException() {
-        when(payloadMapper.buildRequestBody(any(), any(), anyString(), any()))
+        when(payloadMapper.buildRequestBody(any(), any(), any(), anyString(), any()))
                 .thenReturn("mock-body");
         stubChainUntilRetrieveThrows(
                 new HttpClientErrorException(HttpStatusCode.valueOf(401), "Unauthorized",
@@ -106,7 +107,7 @@ class ByokLanguageModelAdapterTest {
 
     @Test
     void analyze_httpServerError_throwsAiAnalysisException() {
-        when(payloadMapper.buildRequestBody(any(), any(), anyString(), any()))
+        when(payloadMapper.buildRequestBody(any(), any(), any(), anyString(), any()))
                 .thenReturn("mock-body");
         stubChainUntilRetrieveThrows(
                 new HttpServerErrorException(HttpStatusCode.valueOf(503), "Service Unavailable",
@@ -119,7 +120,7 @@ class ByokLanguageModelAdapterTest {
 
     @Test
     void analyze_networkError_throwsAiAnalysisException() {
-        when(payloadMapper.buildRequestBody(any(), any(), anyString(), any()))
+        when(payloadMapper.buildRequestBody(any(), any(), any(), anyString(), any()))
                 .thenReturn("mock-body");
         stubChainUntilRetrieveThrows(new ResourceAccessException("Connection refused"));
 
@@ -131,7 +132,7 @@ class ByokLanguageModelAdapterTest {
 
     @Test
     void analyze_nullResponseFromExtractor_throwsAiAnalysisException() {
-        when(payloadMapper.buildRequestBody(any(), any(), anyString(), any()))
+        when(payloadMapper.buildRequestBody(any(), any(), any(), anyString(), any()))
                 .thenReturn("mock-body");
         stubFullChain("raw-provider-response");
         when(responseExtractor.extractContent(anyString(), any()))

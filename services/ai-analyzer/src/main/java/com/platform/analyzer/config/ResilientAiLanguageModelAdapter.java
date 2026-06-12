@@ -1,6 +1,7 @@
 package com.platform.analyzer.config;
 
 import com.platform.analyzer.domain.model.AiAnalysis;
+import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
@@ -24,9 +25,9 @@ public class ResilientAiLanguageModelAdapter implements AiLanguageModelPort {
 
     private static final String DEGRADED_VERDICT = "DEGRADED";
     private static final String DEGRADED_ROOT_CAUSE =
-            "Análisis degradado temporalmente — el proveedor de IA no está disponible";
+            "AI provider unavailable (circuit breaker open)";
     private static final List<String> DEGRADED_ACTIONS =
-            List.of("Verificar disponibilidad del proveedor de IA");
+            List.of("Retry after provider recovery");
 
     private final AiLanguageModelPort delegate;
     private final CircuitBreaker circuitBreaker;
@@ -38,9 +39,9 @@ public class ResilientAiLanguageModelAdapter implements AiLanguageModelPort {
     }
 
     @Override
-    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history) {
+    public AiAnalysis analyze(KubernetesEvent event, List<AiAnalysis> history, EnrichedContext context) {
         try {
-            return circuitBreaker.executeSupplier(() -> delegate.analyze(event, history));
+            return circuitBreaker.executeSupplier(() -> delegate.analyze(event, history, context));
         } catch (CallNotPermittedException ex) {
             log.warn("Circuit breaker OPEN — generating degraded analysis. podName={}, cbState={}",
                     event.podName(), circuitBreaker.getState());
@@ -59,6 +60,7 @@ public class ResilientAiLanguageModelAdapter implements AiLanguageModelPort {
     /**
      * Produces a valid degraded AiAnalysis in constant time (&lt;1ms).
      * Pure method — no I/O, no allocations beyond the record itself.
+     * Explicitly sets Phase 15 metadata: mcpToolsUsed empty, mcpContextAvailable false.
      */
     AiAnalysis buildDegradedAnalysis(KubernetesEvent event) {
         return new AiAnalysis(
@@ -66,7 +68,9 @@ public class ResilientAiLanguageModelAdapter implements AiLanguageModelPort {
                 event.namespace(),
                 DEGRADED_VERDICT,
                 DEGRADED_ROOT_CAUSE,
-                DEGRADED_ACTIONS
+                DEGRADED_ACTIONS,
+                List.of(),
+                false
         );
     }
 }

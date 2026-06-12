@@ -100,7 +100,7 @@ class ResilientAdapterPropertyTest {
 
         CircuitBreaker cb = createClosedCircuitBreaker();
         ResilientAiLanguageModelAdapter adapter =
-                new ResilientAiLanguageModelAdapter((e, h) -> null, cb);
+                new ResilientAiLanguageModelAdapter((e, h, c) -> null, cb);
 
         AiAnalysis result = adapter.buildDegradedAnalysis(event);
 
@@ -109,10 +109,12 @@ class ResilientAdapterPropertyTest {
         assertThat(result.namespace()).isEqualTo(event.namespace());
         assertThat(result.verdict()).isEqualTo("DEGRADED");
         assertThat(result.rootCauseAnalysis())
-                .isEqualTo("Análisis degradado temporalmente — el proveedor de IA no está disponible");
+                .isEqualTo("AI provider unavailable (circuit breaker open)");
         assertThat(result.recommendedActions()).hasSize(1);
         assertThat(result.recommendedActions().get(0))
-                .isEqualTo("Verificar disponibilidad del proveedor de IA");
+                .isEqualTo("Retry after provider recovery");
+        assertThat(result.mcpToolsUsed()).isEmpty();
+        assertThat(result.mcpContextAvailable()).isFalse();
         // All fields non-null
         assertThat(result.podName()).isNotNull();
         assertThat(result.namespace()).isNotNull();
@@ -136,7 +138,7 @@ class ResilientAdapterPropertyTest {
             @ForAll("exceptionMessages") String message) {
 
         CircuitBreaker cb = createClosedCircuitBreaker();
-        AiLanguageModelPort failingDelegate = (e, h) -> {
+        AiLanguageModelPort failingDelegate = (e, h, c) -> {
             throw new AiAnalysisException(message);
         };
         ResilientAiLanguageModelAdapter adapter =
@@ -155,7 +157,7 @@ class ResilientAdapterPropertyTest {
             @ForAll("exceptionMessages") String message) {
 
         CircuitBreaker cb = createClosedCircuitBreaker();
-        AiLanguageModelPort failingDelegate = (e, h) -> {
+        AiLanguageModelPort failingDelegate = (e, h, c) -> {
             throw new ResourceAccessException(message);
         };
         ResilientAiLanguageModelAdapter adapter =
@@ -184,7 +186,7 @@ class ResilientAdapterPropertyTest {
 
         CircuitBreaker cb = createClosedCircuitBreaker();
         IllegalStateException originalEx = new IllegalStateException(message);
-        AiLanguageModelPort failingDelegate = (e, h) -> {
+        AiLanguageModelPort failingDelegate = (e, h, c) -> {
             throw originalEx;
         };
         ResilientAiLanguageModelAdapter adapter =
@@ -208,7 +210,7 @@ class ResilientAdapterPropertyTest {
 
         CircuitBreaker cb = createOpenCircuitBreaker();
         boolean[] delegateCalled = {false};
-        AiLanguageModelPort delegate = (e, h) -> {
+        AiLanguageModelPort delegate = (e, h, c) -> {
             delegateCalled[0] = true;
             return new AiAnalysis("x", "y", "CRITICAL", "test", List.of("action"));
         };
@@ -235,7 +237,7 @@ class ResilientAdapterPropertyTest {
             @ForAll("kubernetesEvents") KubernetesEvent event) {
 
         CircuitBreaker cb = createOpenCircuitBreaker();
-        AiLanguageModelPort delegate = (e, h) -> {
+        AiLanguageModelPort delegate = (e, h, c) -> {
             throw new RuntimeException("should not be called");
         };
         ResilientAiLanguageModelAdapter adapter =
@@ -262,7 +264,7 @@ class ResilientAdapterPropertyTest {
             @ForAll("aiAnalyses") AiAnalysis expectedAnalysis) {
 
         CircuitBreaker cb = createClosedCircuitBreaker();
-        AiLanguageModelPort delegate = (e, h) -> expectedAnalysis;
+        AiLanguageModelPort delegate = (e, h, c) -> expectedAnalysis;
         ResilientAiLanguageModelAdapter adapter =
                 new ResilientAiLanguageModelAdapter(delegate, cb);
 

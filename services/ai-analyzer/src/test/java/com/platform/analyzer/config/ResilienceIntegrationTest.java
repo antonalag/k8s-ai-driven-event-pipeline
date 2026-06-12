@@ -41,7 +41,7 @@ class ResilienceIntegrationTest {
 
         @Bean
         AiLanguageModelPort aiLanguageModelPort() {
-            return (event, history) -> DELEGATE_RESULT;
+            return (event, history, context) -> DELEGATE_RESULT;
         }
     }
 

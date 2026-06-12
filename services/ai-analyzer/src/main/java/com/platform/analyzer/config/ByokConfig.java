@@ -5,6 +5,7 @@ import com.platform.analyzer.domain.ports.AiLanguageModelPort;
 import com.platform.analyzer.infrastructure.client.byok.ByokLanguageModelAdapter;
 import com.platform.analyzer.infrastructure.client.byok.ByokPayloadMapper;
 import com.platform.analyzer.infrastructure.client.byok.ByokResponseExtractor;
+import com.platform.analyzer.service.PromptTruncator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,7 @@ import org.springframework.web.client.RestClient;
  */
 @Configuration
 @ConditionalOnProperty(name = "platform.ai.provider", havingValue = "byok")
-@EnableConfigurationProperties(ByokProperties.class)
+@EnableConfigurationProperties({ByokProperties.class, McpProperties.class})
 public class ByokConfig {
 
     @Bean
@@ -31,8 +32,9 @@ public class ByokConfig {
     }
 
     @Bean
-    ByokPayloadMapper byokPayloadMapper() {
-        return new ByokPayloadMapper();
+    ByokPayloadMapper byokPayloadMapper(McpProperties mcpProperties) {
+        PromptTruncator truncator = new PromptTruncator(mcpProperties.maxPromptBytes());
+        return new ByokPayloadMapper(truncator);
     }
 
     @Bean
