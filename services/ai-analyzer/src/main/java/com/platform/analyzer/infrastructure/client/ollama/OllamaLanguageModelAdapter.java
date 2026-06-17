@@ -7,6 +7,7 @@ import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
 import com.platform.analyzer.service.PromptTruncator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,13 +72,14 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
     private final String model;
     private final String baseUrl;
     private final PromptTruncator promptTruncator;
+    private final PromptCalibrationStrategy promptCalibrationStrategy;
 
     public OllamaLanguageModelAdapter(
             RestClient ollamaRestClient,
             ObjectMapper objectMapper,
             String model,
             String baseUrl) {
-        this(ollamaRestClient, objectMapper, model, baseUrl, new PromptTruncator(65536));
+        this(ollamaRestClient, objectMapper, model, baseUrl, new PromptTruncator(65536), null);
     }
 
     public OllamaLanguageModelAdapter(
@@ -86,11 +88,22 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
             String model,
             String baseUrl,
             PromptTruncator promptTruncator) {
+        this(ollamaRestClient, objectMapper, model, baseUrl, promptTruncator, null);
+    }
+
+    public OllamaLanguageModelAdapter(
+            RestClient ollamaRestClient,
+            ObjectMapper objectMapper,
+            String model,
+            String baseUrl,
+            PromptTruncator promptTruncator,
+            PromptCalibrationStrategy promptCalibrationStrategy) {
         this.ollamaRestClient = ollamaRestClient;
         this.objectMapper = objectMapper;
         this.model = model;
         this.baseUrl = baseUrl;
         this.promptTruncator = promptTruncator;
+        this.promptCalibrationStrategy = promptCalibrationStrategy;
     }
 
     @Override
@@ -160,6 +173,14 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
                 event.status(),
                 event.timestamp()
         );
+
+        // Append calibration instructions (before MCP context for truncation budget purposes)
+        if (promptCalibrationStrategy != null) {
+            String calibration = promptCalibrationStrategy.buildCalibratedPrompt(event, context);
+            if (calibration != null && !calibration.isBlank()) {
+                basePrompt = basePrompt + calibration;
+            }
+        }
 
         if (context == null || !context.hasContent()) {
             return basePrompt;

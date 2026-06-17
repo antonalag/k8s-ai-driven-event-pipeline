@@ -2,6 +2,7 @@ package com.platform.analyzer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
 import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
 import com.platform.analyzer.service.PromptTruncator;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,8 +38,10 @@ public class OllamaConfig {
             RestClient ollamaRestClient,
             ObjectMapper objectMapper,
             McpProperties mcpProperties,
+            PromptCalibrationStrategy promptCalibrationStrategy,
             @Value("${ollama.model}") String model) {
         PromptTruncator truncator = new PromptTruncator(mcpProperties.maxPromptBytes());
-        return new OllamaLanguageModelAdapter(ollamaRestClient, objectMapper, model, ollamaApiUrl, truncator);
+        return new OllamaLanguageModelAdapter(
+                ollamaRestClient, objectMapper, model, ollamaApiUrl, truncator, promptCalibrationStrategy);
     }
 }

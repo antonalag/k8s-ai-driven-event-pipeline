@@ -2,6 +2,7 @@ package com.platform.analyzer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
 import com.platform.analyzer.infrastructure.client.byok.ByokLanguageModelAdapter;
 import com.platform.analyzer.infrastructure.client.byok.ByokPayloadMapper;
 import com.platform.analyzer.infrastructure.client.byok.ByokResponseExtractor;
@@ -32,9 +33,9 @@ public class ByokConfig {
     }
 
     @Bean
-    ByokPayloadMapper byokPayloadMapper(McpProperties mcpProperties) {
+    ByokPayloadMapper byokPayloadMapper(McpProperties mcpProperties, PromptCalibrationStrategy promptCalibrationStrategy) {
         PromptTruncator truncator = new PromptTruncator(mcpProperties.maxPromptBytes());
-        return new ByokPayloadMapper(truncator);
+        return new ByokPayloadMapper(truncator, promptCalibrationStrategy);
     }
 
     @Bean

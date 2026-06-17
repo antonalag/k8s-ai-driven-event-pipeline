@@ -18,7 +18,7 @@ import java.time.Duration;
 
 /**
  * Creates the MCP-dedicated Resilience4j CircuitBreaker and the decorated McpContextPort bean.
- * The decorated bean is marked @Primary so OllamaAnalyzerService receives it automatically.
+ * The decorated bean is marked @Primary so PodAnalyzerService receives it automatically.
  * Independent from the AI provider circuit breaker ({@link ResilienceConfig}).
  */
 @Configuration
@@ -28,7 +28,7 @@ public class McpResilienceConfig {
     private static final Logger log = LoggerFactory.getLogger(McpResilienceConfig.class);
 
     @Bean
-    CircuitBreaker mcpCircuitBreaker(McpCircuitBreakerProperties properties) {
+    CircuitBreakerRegistry mcpCircuitBreakerRegistry(McpCircuitBreakerProperties properties) {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
                 .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
                 .slidingWindowSize(properties.slidingWindowSize())
@@ -40,11 +40,13 @@ public class McpResilienceConfig {
                 .recordExceptions(ResourceAccessException.class, RuntimeException.class)
                 .build();
 
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
-        CircuitBreaker circuitBreaker = registry.circuitBreaker("mcpCircuitBreaker");
+        return CircuitBreakerRegistry.of(config);
+    }
 
+    @Bean
+    CircuitBreaker mcpCircuitBreaker(CircuitBreakerRegistry mcpCircuitBreakerRegistry) {
+        CircuitBreaker circuitBreaker = mcpCircuitBreakerRegistry.circuitBreaker("mcpCircuitBreaker");
         registerStateTransitionListener(circuitBreaker);
-
         return circuitBreaker;
     }
 

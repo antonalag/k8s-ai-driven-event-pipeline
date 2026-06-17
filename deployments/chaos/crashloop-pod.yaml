@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chaos-crashloop-pod
+  namespace: chaos-validation
+  labels:
+    chaos-type: crashloop
+    phase: e2e-validation
+spec:
+  restartPolicy: Always
+  containers:
+    - name: crashloop-container
+      image: busybox@sha256:2376a0c12759aa1214ba83f5eee1c1bdf7decfa7a7a8f843d4d3ce30552c3130
+      command: ["sh", "-c"]
+      args:
+        - |
+          if [ -z "$REQUIRED_CONFIG_VALUE" ]; then
+            echo "ERROR: REQUIRED_CONFIG_VALUE not set - exiting with failure" >&2
+            exit 1
+          fi
+          echo "Running with config: $REQUIRED_CONFIG_VALUE"
+          sleep infinity
+      env:
+        - name: REQUIRED_CONFIG_VALUE
+          valueFrom:
+            configMapKeyRef:
+              name: nonexistent-config
+              key: missing-key

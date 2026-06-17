@@ -6,7 +6,9 @@ import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.model.PodPhase;
 import com.platform.analyzer.domain.ports.AiAnalysisRepositoryPort;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.ports.CircuitBreakerStatePort;
 import com.platform.analyzer.domain.ports.McpContextPort;
+import com.platform.analyzer.domain.ports.PipelineTracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +18,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class OllamaAnalyzerServiceTest {
+class PodAnalyzerServiceTest {
 
     private static final Instant FIXED_INSTANT = Instant.parse("2024-01-15T10:30:00Z");
 
@@ -36,6 +38,17 @@ class OllamaAnalyzerServiceTest {
     /** Mock MCP port that always returns EMPTY context (backward-compatible behavior). */
     private static final McpContextPort EMPTY_MCP_CONTEXT = (podName, namespace) -> EnrichedContext.EMPTY;
 
+    /** No-op pipeline tracer for unit tests. */
+    private static final PipelineTracer NO_OP_TRACER = new PipelineTracer() {
+        @Override public void logCycleStart(String correlationId, String cbState, String podName, String namespace) {}
+        @Override public void logToolResult(String correlationId, String toolName, long responseTimeMs, boolean success) {}
+        @Override public void logCycleComplete(String correlationId, String podName, String namespace, int toolsUsed, long totalTimeMs, String verdict) {}
+        @Override public void logThresholdExceeded(String correlationId, long elapsedMs) {}
+    };
+
+    /** Stub circuit breaker state port that always returns CLOSED. */
+    private static final CircuitBreakerStatePort CB_STATE_PORT = () -> "CLOSED";
+
     @Test
     @DisplayName("should delegate to AiLanguageModelPort and return result")
     void shouldDelegateToPort() {
@@ -44,7 +57,7 @@ class OllamaAnalyzerServiceTest {
                 "OOMKilled", List.of("Increase memory limits"));
 
         AiLanguageModelPort mockPort = (event, history, context) -> expected;
-        OllamaAnalyzerService service = new OllamaAnalyzerService(mockPort, EMPTY_REPO, EMPTY_MCP_CONTEXT);
+        PodAnalyzerService service = new PodAnalyzerService(mockPort, EMPTY_REPO, EMPTY_MCP_CONTEXT, NO_OP_TRACER, CB_STATE_PORT);
 
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
@@ -57,7 +70,7 @@ class OllamaAnalyzerServiceTest {
         AiLanguageModelPort failingPort = (event, history, context) -> {
             throw new com.platform.analyzer.domain.ports.AiAnalysisException("AI failed");
         };
-        OllamaAnalyzerService service = new OllamaAnalyzerService(failingPort, EMPTY_REPO, EMPTY_MCP_CONTEXT);
+        PodAnalyzerService service = new PodAnalyzerService(failingPort, EMPTY_REPO, EMPTY_MCP_CONTEXT, NO_OP_TRACER, CB_STATE_PORT);
 
         assertThatThrownBy(() -> service.analyse(FAILED_POD_EVENT))
                 .isInstanceOf(com.platform.analyzer.domain.ports.AiAnalysisException.class)
@@ -89,7 +102,7 @@ class OllamaAnalyzerServiceTest {
             return expected;
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(portCapturingHistory, repoWithHistory, EMPTY_MCP_CONTEXT);
+        PodAnalyzerService service = new PodAnalyzerService(portCapturingHistory, repoWithHistory, EMPTY_MCP_CONTEXT, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);
@@ -115,7 +128,7 @@ class OllamaAnalyzerServiceTest {
             return expected;
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(portCapturingContext, EMPTY_REPO, mcpPort);
+        PodAnalyzerService service = new PodAnalyzerService(portCapturingContext, EMPTY_REPO, mcpPort, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);
@@ -135,7 +148,7 @@ class OllamaAnalyzerServiceTest {
             return expected;
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(portCapturingContext, EMPTY_REPO, EMPTY_MCP_CONTEXT);
+        PodAnalyzerService service = new PodAnalyzerService(portCapturingContext, EMPTY_REPO, EMPTY_MCP_CONTEXT, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);
@@ -165,7 +178,7 @@ class OllamaAnalyzerServiceTest {
             return expected;
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(portCapturingContext, EMPTY_REPO, partialMcpPort);
+        PodAnalyzerService service = new PodAnalyzerService(portCapturingContext, EMPTY_REPO, partialMcpPort, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);
@@ -195,7 +208,7 @@ class OllamaAnalyzerServiceTest {
             return expected;
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(portCapturingContext, EMPTY_REPO, partialMcpPort);
+        PodAnalyzerService service = new PodAnalyzerService(portCapturingContext, EMPTY_REPO, partialMcpPort, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);
@@ -212,7 +225,7 @@ class OllamaAnalyzerServiceTest {
             throw new AssertionError("AI port should not be called when MCP port throws");
         };
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(neverCalledPort, EMPTY_REPO, failingMcpPort);
+        PodAnalyzerService service = new PodAnalyzerService(neverCalledPort, EMPTY_REPO, failingMcpPort, NO_OP_TRACER, CB_STATE_PORT);
 
         assertThatThrownBy(() -> service.analyse(FAILED_POD_EVENT))
                 .isInstanceOf(RuntimeException.class)
@@ -234,7 +247,7 @@ class OllamaAnalyzerServiceTest {
 
         AiLanguageModelPort simplePort = (event, history, context) -> expected;
 
-        OllamaAnalyzerService service = new OllamaAnalyzerService(simplePort, EMPTY_REPO, capturingMcpPort);
+        PodAnalyzerService service = new PodAnalyzerService(simplePort, EMPTY_REPO, capturingMcpPort, NO_OP_TRACER, CB_STATE_PORT);
         AiAnalysis result = service.analyse(FAILED_POD_EVENT);
 
         assertThat(result).isEqualTo(expected);

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chaos-oomkilled-pod
+  namespace: chaos-validation
+  labels:
+    chaos-type: oomkilled
+    phase: e2e-validation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: oom-container
+      image: alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Allocating memory beyond 64Mi limit..."
+          # Use head + tr to allocate a large block that exceeds the 64Mi limit
+          head -c 128M /dev/urandom > /dev/null 2>&1 || true
+          # Fallback: allocate via a variable in memory
+          dd if=/dev/zero bs=1M count=128 2>/dev/null | cat > /dev/null
+          # If we get here, try direct allocation approach
+          yes | head -c 128M > /tmp/fill_memory 2>/dev/null || true
+      resources:
+        requests:
+          memory: "32Mi"
+        limits:
+          memory: "64Mi"

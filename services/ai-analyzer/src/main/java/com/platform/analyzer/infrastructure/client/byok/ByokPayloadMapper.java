@@ -3,6 +3,7 @@ package com.platform.analyzer.infrastructure.client.byok;
 import com.platform.analyzer.domain.model.AiAnalysis;
 import com.platform.analyzer.domain.model.EnrichedContext;
 import com.platform.analyzer.domain.model.KubernetesEvent;
+import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
 import com.platform.analyzer.infrastructure.client.byok.dto.CustomProviderRequest;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiMessage;
 import com.platform.analyzer.infrastructure.client.byok.dto.OpenAiRequest;
@@ -60,13 +61,19 @@ public class ByokPayloadMapper {
             """;
 
     private final PromptTruncator promptTruncator;
+    private final PromptCalibrationStrategy promptCalibrationStrategy;
 
     public ByokPayloadMapper() {
-        this(new PromptTruncator(65536));
+        this(new PromptTruncator(65536), null);
     }
 
     public ByokPayloadMapper(PromptTruncator promptTruncator) {
+        this(promptTruncator, null);
+    }
+
+    public ByokPayloadMapper(PromptTruncator promptTruncator, PromptCalibrationStrategy promptCalibrationStrategy) {
         this.promptTruncator = promptTruncator;
+        this.promptCalibrationStrategy = promptCalibrationStrategy;
     }
 
     /**
@@ -84,6 +91,14 @@ public class ByokPayloadMapper {
         String historyContext = formatHistoryContext(history);
         String systemPrompt = SYSTEM_PROMPT_TEMPLATE.formatted(historyContext);
         String userContent = formatUserContent(event);
+
+        // Append calibration instructions before MCP context (for truncation budget purposes)
+        if (promptCalibrationStrategy != null) {
+            String calibration = promptCalibrationStrategy.buildCalibratedPrompt(event, context);
+            if (calibration != null && !calibration.isBlank()) {
+                userContent = userContent + calibration;
+            }
+        }
 
         if (context != null && context.hasContent()) {
             int basePromptBytes = (systemPrompt + "\n" + userContent).getBytes(StandardCharsets.UTF_8).length;

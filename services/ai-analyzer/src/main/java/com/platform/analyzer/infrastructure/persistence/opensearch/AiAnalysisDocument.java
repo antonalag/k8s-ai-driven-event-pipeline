@@ -8,7 +8,9 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * OpenSearch document entity representing a persisted AI analysis report.
@@ -34,6 +36,15 @@ public class AiAnalysisDocument {
     @Field(type = FieldType.Text)
     private List<String> recommendedActions;
 
+    @Field(type = FieldType.Keyword)
+    private List<String> mcpToolsUsed;
+
+    @Field(type = FieldType.Boolean)
+    private boolean mcpContextAvailable;
+
+    @Field(type = FieldType.Object)
+    private Map<String, String> labels;
+
     @Field(type = FieldType.Date)
     private Instant analyzedAt;
 
@@ -44,18 +55,23 @@ public class AiAnalysisDocument {
 
     public static AiAnalysisDocument from(AiAnalysis analysis) {
         AiAnalysisDocument doc = new AiAnalysisDocument();
-        doc.id = analysis.podName() + "-" + Instant.now().toEpochMilli();
+        Instant now = Instant.now();
+        doc.analyzedAt = now;
+        doc.id = analysis.podName() + "-" + now.toEpochMilli();
         doc.podName = analysis.podName();
         doc.namespace = analysis.namespace();
         doc.verdict = analysis.verdict();
         doc.rootCauseAnalysis = analysis.rootCauseAnalysis();
         doc.recommendedActions = analysis.recommendedActions();
-        doc.analyzedAt = Instant.now();
+        doc.mcpToolsUsed = analysis.mcpToolsUsed() != null ? analysis.mcpToolsUsed() : List.of();
+        doc.mcpContextAvailable = analysis.mcpContextAvailable();
+        doc.labels = new HashMap<>();
         return doc;
     }
 
     public AiAnalysis toDomain() {
-        return new AiAnalysis(podName, namespace, verdict, rootCauseAnalysis, recommendedActions);
+        return new AiAnalysis(podName, namespace, verdict, rootCauseAnalysis, recommendedActions,
+                mcpToolsUsed != null ? mcpToolsUsed : List.of(), mcpContextAvailable);
     }
 
     public AiAnalysisView toView() {
@@ -68,6 +84,10 @@ public class AiAnalysisDocument {
     public String getVerdict() { return verdict; }
     public String getRootCauseAnalysis() { return rootCauseAnalysis; }
     public List<String> getRecommendedActions() { return recommendedActions; }
+    public List<String> getMcpToolsUsed() { return mcpToolsUsed; }
+    public boolean isMcpContextAvailable() { return mcpContextAvailable; }
+    public Map<String, String> getLabels() { return labels; }
+    public void setLabels(Map<String, String> labels) { this.labels = labels; }
     public Instant getAnalyzedAt() { return analyzedAt; }
     public Instant getSourceEventTimestamp() { return sourceEventTimestamp; }
 }

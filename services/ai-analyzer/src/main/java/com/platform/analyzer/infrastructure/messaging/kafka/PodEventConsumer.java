@@ -8,7 +8,7 @@ import com.platform.analyzer.domain.model.KubernetesEvent;
 import com.platform.analyzer.domain.model.PodPhase;
 import com.platform.analyzer.domain.ports.AiAnalysisException;
 import com.platform.analyzer.domain.ports.LmMessagingPort;
-import com.platform.analyzer.service.OllamaAnalyzerService;
+import com.platform.analyzer.service.PodAnalyzerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,12 +24,12 @@ public class PodEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PodEventConsumer.class);
 
-    private final OllamaAnalyzerService analyzerService;
+    private final PodAnalyzerService analyzerService;
     private final LmMessagingPort messagingPort;
     private final ObjectMapper objectMapper;
 
     public PodEventConsumer(
-            OllamaAnalyzerService analyzerService,
+            PodAnalyzerService analyzerService,
             LmMessagingPort messagingPort,
             ObjectMapper objectMapper) {
         this.analyzerService = analyzerService;

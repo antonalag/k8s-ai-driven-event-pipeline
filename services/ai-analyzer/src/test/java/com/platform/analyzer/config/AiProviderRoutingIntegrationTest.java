@@ -2,10 +2,12 @@ package com.platform.analyzer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
 import com.platform.analyzer.infrastructure.client.byok.ByokLanguageModelAdapter;
 import com.platform.analyzer.infrastructure.client.byok.ByokPayloadMapper;
 import com.platform.analyzer.infrastructure.client.byok.ByokResponseExtractor;
 import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.prompt.DefaultPromptCalibrationStrategy;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,11 @@ class AiProviderRoutingIntegrationTest {
         ObjectMapper objectMapper() {
             return new ObjectMapper();
         }
+
+        @Bean
+        PromptCalibrationStrategy promptCalibrationStrategy() {
+            return new DefaultPromptCalibrationStrategy();
+        }
     }
 
     @Configuration
@@ -44,6 +51,11 @@ class AiProviderRoutingIntegrationTest {
         @Bean
         ObjectMapper objectMapper() {
             return new ObjectMapper();
+        }
+
+        @Bean
+        PromptCalibrationStrategy promptCalibrationStrategy() {
+            return new DefaultPromptCalibrationStrategy();
         }
     }
 

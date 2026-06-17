@@ -19,7 +19,7 @@ import java.time.Duration;
 
 /**
  * Creates the Resilience4j CircuitBreaker and the decorated AiLanguageModelPort bean.
- * The decorated bean is marked @Primary so OllamaAnalyzerService receives it automatically.
+ * The decorated bean is marked @Primary so PodAnalyzerService receives it automatically.
  */
 @Configuration
 @EnableConfigurationProperties(CircuitBreakerProperties.class)

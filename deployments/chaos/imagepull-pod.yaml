@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chaos-imagepull-pod
+  namespace: chaos-validation
+  labels:
+    chaos-type: imagepullbackoff
+    phase: e2e-validation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: invalid-image-container
+      image: invalid-registry.example.com/nonexistent:v0.0.0
+      imagePullPolicy: Always
