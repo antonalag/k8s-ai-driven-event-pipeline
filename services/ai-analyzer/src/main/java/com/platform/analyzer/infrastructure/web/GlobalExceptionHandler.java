@@ -1,6 +1,7 @@
 package com.platform.analyzer.infrastructure.web;
 
 import com.platform.analyzer.domain.ports.AiAnalysisException;
+import com.platform.analyzer.domain.ports.RemediationException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             URI.create("urn:problem-type:circuit-breaker-open");
     private static final URI AI_ANALYSIS_TYPE =
             URI.create("urn:problem-type:ai-analysis-failure");
+    private static final URI REMEDIATION_TYPE =
+            URI.create("urn:problem-type:remediation-upstream-failure");
 
     // ─── Bean Validation (400) ────────────────────────────────────────────────
 
@@ -87,6 +90,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "The AI provider could not complete the analysis request.");
         problem.setTitle("AI Analysis Failure");
         problem.setType(AI_ANALYSIS_TYPE);
+        return problem;
+    }
+
+    // ─── Domain: RemediationException (502) ───────────────────────────────────
+
+    @ExceptionHandler(RemediationException.class)
+    public ProblemDetail handleRemediationException(RemediationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY,
+                "Remediation upstream failure: the MCP Server could not execute the mutation.");
+        problem.setTitle("Remediation Upstream Failure");
+        problem.setType(REMEDIATION_TYPE);
         return problem;
     }
 }

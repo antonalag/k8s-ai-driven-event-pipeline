@@ -44,7 +44,7 @@ describe('Property 10: UI renders N actions as N code blocks with copy buttons',
   it('for any list of 1-5 actions, renders exactly N action blocks each with a copy button', () => {
     fc.assert(
       fc.property(
-        actionArb.filter((s) => s.trim().length > 0).array({ minLength: 1, maxLength: 5 }),
+        fc.array(actionArb.filter((s) => s.trim().length > 0), { minLength: 1, maxLength: 5 }),
         (actions: string[]) => {
           const { container } = render(<RecommendedActionBlock actions={actions} />);
 
@@ -210,9 +210,9 @@ describe('Property 13: UI action grouping by categorization', () => {
   it('for >5 actions, renders collapsible groups with correct categorization', () => {
     // Generate at least 6 mixed actions
     const mixedActionsArb = fc.tuple(
-      kubectlActionArb.array({ minLength: 2, maxLength: 3 }),
-      configActionArb.array({ minLength: 2, maxLength: 3 }),
-      verificationActionArb.array({ minLength: 2, maxLength: 3 }),
+      fc.array(kubectlActionArb, { minLength: 2, maxLength: 3 }),
+      fc.array(configActionArb, { minLength: 2, maxLength: 3 }),
+      fc.array(verificationActionArb, { minLength: 2, maxLength: 3 }),
     ).map(([kubectl, config, verification]) => [...kubectl, ...config, ...verification]);
 
     fc.assert(
@@ -247,7 +247,7 @@ describe('Property 13: UI action grouping by categorization', () => {
   it('for ≤5 actions, renders flat action blocks without grouping', () => {
     fc.assert(
       fc.property(
-        actionArb.filter((s) => s.trim().length > 0).array({ minLength: 1, maxLength: 5 }),
+        fc.array(actionArb.filter((s) => s.trim().length > 0), { minLength: 1, maxLength: 5 }),
         (actions: string[]) => {
           const { container } = render(<ActionGroupCollapsible actions={actions} />);
 

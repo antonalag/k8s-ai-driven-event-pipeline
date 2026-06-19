@@ -5,10 +5,16 @@ import {
   type JsonRpcSuccessResponse,
   JSON_RPC_ERRORS,
   TOOL_WHITELIST,
+  isWriteTool,
 } from './types.js';
 import { handleGetLogs } from './tools/get-logs.js';
 import { handleGetEvents } from './tools/get-events.js';
 import { handleDescribePod, McpToolError } from './tools/describe-pod.js';
+import { handleRestartDeployment } from './tools/restart-deployment.js';
+import { handleScaleDeployment } from './tools/scale-deployment.js';
+import { handleFixContainerImage } from './tools/fix-container-image.js';
+import { authorizeWriteOperation } from './middleware/rbac-gate.js';
+import { getCache, setCache, buildCacheKey } from './middleware/idempotency-cache.js';
 
 /**
  * Creates a JSON-RPC 2.0 error response.
@@ -61,34 +67,77 @@ function isWhitelistedTool(name: string): boolean {
 }
 
 /**
- * Dispatches a validated tool call to the appropriate handler.
- * Returns the full JsonRpcResponse for tools that manage their own responses,
- * or throws McpToolError for describe_pod which uses the throw pattern.
+ * Dispatches a validated read-only tool call to the appropriate handler.
  */
-async function dispatchTool(
-  id: string | number | null,
+async function dispatchReadTool(
   toolName: string,
   args: Record<string, unknown>
-): Promise<JsonRpcResponse> {
+): Promise<string> {
   switch (toolName) {
-    case 'describe_pod': {
-      const result = await handleDescribePod(args);
-      return createSuccessResponse(id, result);
-    }
-    case 'get_events': {
-      const eventsResult = await handleGetEvents(args);
-      return createSuccessResponse(id, eventsResult);
-    }
-    case 'get_logs': {
-      const logsResult = await handleGetLogs(args);
-      return createSuccessResponse(id, logsResult);
-    }
+    case 'describe_pod':
+      return await handleDescribePod(args);
+    case 'get_events':
+      return await handleGetEvents(args);
+    case 'get_logs':
+      return await handleGetLogs(args);
     default:
       throw new McpToolError(
         JSON_RPC_ERRORS.METHOD_NOT_FOUND,
         `Tool '${toolName}' is not implemented`
       );
   }
+}
+
+/**
+ * Dispatches a validated write-back tool call to the appropriate handler.
+ * Write tools go through RBAC gate and idempotency cache.
+ */
+async function dispatchWriteTool(
+  toolName: string,
+  args: Record<string, unknown>
+): Promise<string> {
+  // Extract namespace for RBAC validation
+  const namespace = typeof args.namespace === 'string' ? args.namespace : '';
+
+  // RBAC gate: validates namespace authorization (throws McpToolError on deny)
+  authorizeWriteOperation(toolName, namespace);
+
+  // Idempotency: check cache if correlationId is provided
+  const correlationId = typeof args.correlationId === 'string' ? args.correlationId : undefined;
+  if (correlationId) {
+    const cacheKey = buildCacheKey(correlationId, toolName);
+    const cached = getCache(cacheKey);
+    if (cached !== undefined) {
+      return cached;
+    }
+  }
+
+  // Dispatch to the appropriate write tool handler
+  let result: string;
+  switch (toolName) {
+    case 'restart_deployment':
+      result = await handleRestartDeployment(args);
+      break;
+    case 'scale_deployment':
+      result = await handleScaleDeployment(args);
+      break;
+    case 'fix_container_image':
+      result = await handleFixContainerImage(args);
+      break;
+    default:
+      throw new McpToolError(
+        JSON_RPC_ERRORS.METHOD_NOT_FOUND,
+        `Write tool '${toolName}' is not implemented`
+      );
+  }
+
+  // Store in idempotency cache on success
+  if (correlationId) {
+    const cacheKey = buildCacheKey(correlationId, toolName);
+    setCache(cacheKey, result);
+  }
+
+  return result;
 }
 
 /**
@@ -133,10 +182,16 @@ export async function handleJsonRpcRequest(rawBody: string): Promise<JsonRpcResp
     );
   }
 
-  // Step 6: Dispatch to tool handler
+  // Step 6: Dispatch to appropriate handler (read vs write path)
   const args = request.params.arguments || {};
   try {
-    return await dispatchTool(id, toolName, args);
+    let resultText: string;
+    if (isWriteTool(toolName)) {
+      resultText = await dispatchWriteTool(toolName, args);
+    } else {
+      resultText = await dispatchReadTool(toolName, args);
+    }
+    return createSuccessResponse(id, resultText);
   } catch (err: unknown) {
     if (err instanceof McpToolError) {
       return createErrorResponse(id, err.code, err.message);
