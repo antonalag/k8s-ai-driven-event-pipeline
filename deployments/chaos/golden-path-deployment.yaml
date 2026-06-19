@@ -1,0 +1,53 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Golden Path — Chaos Deployment (ImagePullBackOff)
+#
+# Deploys a single-replica Deployment with an intentionally invalid image.
+# The k8s-collector detects the failure, the AI diagnoses it, and the user
+# fixes it via 1-click remediation (fix_container_image → nginx:1.27-alpine).
+#
+# Usage:
+#   kubectl apply -f deployments/chaos/golden-path-deployment.yaml
+#   kubectl delete -f deployments/chaos/golden-path-deployment.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaos-validation
+  labels:
+    purpose: golden-path-demo
+    managed-by: chaos-scenarios
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: golden-path-app
+  namespace: chaos-validation
+  labels:
+    app: golden-path-app
+    chaos-type: imagepullbackoff
+    phase: golden-path
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: golden-path-app
+  template:
+    metadata:
+      labels:
+        app: golden-path-app
+        chaos-type: imagepullbackoff
+        phase: golden-path
+    spec:
+      containers:
+        - name: app
+          image: docker.io/library/nginx:99.99.99-nonexistent
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
