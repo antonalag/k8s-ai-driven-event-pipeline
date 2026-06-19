@@ -137,7 +137,6 @@ public class RemediationAdapter implements RemediationPort {
                 );
             }
 
-            // Parse successful result from content[0].text
             String text = extractText(response);
             if (text == null) {
                 throw new RemediationException(

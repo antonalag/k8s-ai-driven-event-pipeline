@@ -51,21 +51,16 @@ public class ByokLanguageModelAdapter implements AiLanguageModelPort {
                 event.podName(), properties.model(), history.size(),
                 context != null && context.hasContent());
 
-        // 1. Build request body per provider type (with enriched context)
         Object requestBody = payloadMapper.buildRequestBody(
                 event, history, context, properties.model(), properties.providerType());
 
-        // 2. HTTP POST to the external provider
         String responseBody = callProvider(requestBody);
 
-        // 3. Extract raw AI text from response
         String rawContent = responseExtractor.extractContent(
                 responseBody, properties.providerType());
 
-        // 4. Defensive parse into AiAnalysis
         AiAnalysis parsed = parseAnalysis(rawContent, event.podName());
 
-        // 5. Populate Phase 15 metadata fields (LLM doesn't produce these)
         boolean contextAvailable = context != null && context.hasContent();
         List<String> toolsUsed = contextAvailable ? context.toolsUsed() : List.of();
 

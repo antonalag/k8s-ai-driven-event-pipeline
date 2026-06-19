@@ -22,7 +22,7 @@ import {
 
 // --- Generators ---
 
-const actionArb = fc.stringMatching(/^[a-zA-Z0-9 \-\/_.=]+$/).filter((s) => s.length >= 3 && s.length <= 200);
+const actionArb = fc.stringMatching(/^[a-zA-Z0-9 \-/_.=]+$/).filter((s) => s.length >= 3 && s.length <= 200);
 
 const kubectlActionArb = fc.string({ minLength: 3, maxLength: 100 }).map((s) => `kubectl ${s}`);
 

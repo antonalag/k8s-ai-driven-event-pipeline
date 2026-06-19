@@ -8,10 +8,10 @@ import { parseAction, getDisabledReason } from './action-parser';
 
 // --- Generators ---
 
-const deploymentNameArb = fc.stringMatching(/^[a-z][a-z0-9\-]{0,30}[a-z0-9]$/).filter(s => s.length >= 2);
-const namespaceArb = fc.stringMatching(/^[a-z][a-z0-9\-]{0,20}[a-z0-9]$/).filter(s => s.length >= 2);
+const deploymentNameArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,30}[a-z0-9]$/).filter(s => s.length >= 2);
+const namespaceArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,20}[a-z0-9]$/).filter(s => s.length >= 2);
 const replicasArb = fc.integer({ min: 0, max: 10 });
-const containerNameArb = fc.stringMatching(/^[a-z][a-z0-9\-]{0,15}$/).filter(s => s.length >= 2);
+const containerNameArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,15}$/).filter(s => s.length >= 2);
 const imageArb = fc.constantFrom(
   'nginx:1.27-alpine',
   'gcr.io/my-project/app:v2.1.0',

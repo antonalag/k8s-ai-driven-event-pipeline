@@ -69,7 +69,6 @@ export function getCache(key: string): string | undefined {
  * Evicts the oldest entry (LRU) if the cache exceeds MAX_ENTRIES.
  */
 export function setCache(key: string, result: string): void {
-  // If key already exists, remove it first for LRU ordering
   if (cache.has(key)) {
     cache.delete(key);
   }

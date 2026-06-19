@@ -3,7 +3,7 @@
  * Validates: Requirements 11.1-11.7 (button states, transitions, disabled logic)
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { ExecuteActionButton } from './ExecuteActionButton';
 import { createQueryWrapper } from '../test-utils/queryWrapper';
 

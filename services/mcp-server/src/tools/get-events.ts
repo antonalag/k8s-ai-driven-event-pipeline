@@ -143,17 +143,14 @@ async function fetchEventsFromK8s(
 
   const items = response.items || [];
 
-  // Sort by lastTimestamp descending
   const sorted = items.sort((a, b) => {
     const tsA = a.lastTimestamp ? new Date(a.lastTimestamp as unknown as string).getTime() : 0;
     const tsB = b.lastTimestamp ? new Date(b.lastTimestamp as unknown as string).getTime() : 0;
     return tsB - tsA;
   });
 
-  // Limit to maxEvents
   const limited = sorted.slice(0, maxEvents);
 
-  // Map to EventEntry format
   return limited.map((event): EventEntry => {
     const type: 'Normal' | 'Warning' = event.type === 'Normal' ? 'Normal' : 'Warning';
     const reason = event.reason || 'Unknown';
@@ -190,13 +187,11 @@ export async function handleGetEvents(args: Record<string, unknown>): Promise<st
 
   const mode = process.env.MCP_MODE || 'live';
 
-  // Mock mode: return synthetic events
   if (mode === 'mock') {
     const mockEvents = getMockEvents();
     return JSON.stringify(mockEvents);
   }
 
-  // Live mode: query K8s API with timeout enforcement
   const maxEvents = resolveMaxEvents();
 
   try {
@@ -207,7 +202,6 @@ export async function handleGetEvents(args: Record<string, unknown>): Promise<st
       ),
     ]);
 
-    // Return empty array (not error) when no events found
     return JSON.stringify(events);
   } catch (error: unknown) {
     if (error instanceof McpToolError) throw error;

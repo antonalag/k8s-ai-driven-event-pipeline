@@ -92,7 +92,6 @@ public class ByokPayloadMapper {
         String systemPrompt = SYSTEM_PROMPT_TEMPLATE.formatted(historyContext);
         String userContent = formatUserContent(event);
 
-        // Append calibration instructions before MCP context (for truncation budget purposes)
         if (promptCalibrationStrategy != null) {
             String calibration = promptCalibrationStrategy.buildCalibratedPrompt(event, context);
             if (calibration != null && !calibration.isBlank()) {

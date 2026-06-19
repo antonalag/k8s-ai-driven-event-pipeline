@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, within } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import * as fc from 'fast-check';
 import { RecommendedActionBlock } from '../RecommendedActionBlock';
 import { McpToolBadge } from '../McpToolBadge';

@@ -174,7 +174,6 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
                 event.timestamp()
         );
 
-        // Append calibration instructions (before MCP context for truncation budget purposes)
         if (promptCalibrationStrategy != null) {
             String calibration = promptCalibrationStrategy.buildCalibratedPrompt(event, context);
             if (calibration != null && !calibration.isBlank()) {

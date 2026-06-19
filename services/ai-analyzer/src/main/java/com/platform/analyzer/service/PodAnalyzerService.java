@@ -45,30 +45,23 @@ public class PodAnalyzerService {
         String correlationId = UUID.randomUUID().toString();
         long cycleStart = System.currentTimeMillis();
 
-        // Log cycle start with circuit breaker state
         String cbState = circuitBreakerStatePort.getMcpCircuitBreakerState();
         pipelineTracer.logCycleStart(correlationId, cbState, event.podName(), event.namespace());
 
-        // Retrieve history
         List<AiAnalysis> history = aiAnalysisRepositoryPort.findByPodName(event.podName());
 
-        // MCP enrichment with timing
         long mcpStart = System.currentTimeMillis();
         EnrichedContext context = mcpContextPort.retrieveContext(event.podName(), event.namespace());
         long mcpElapsed = System.currentTimeMillis() - mcpStart;
 
-        // Log per-tool results inferred from EnrichedContext
         logToolResults(correlationId, context, mcpElapsed);
 
-        // AI analysis
         AiAnalysis result = aiLanguageModel.analyze(event, history, context);
 
-        // Cycle completion
         long totalTime = System.currentTimeMillis() - cycleStart;
         pipelineTracer.logCycleComplete(correlationId, event.podName(), event.namespace(),
                 context.toolsUsed().size(), totalTime, result.verdict());
 
-        // Threshold check — emit WARN if cycle exceeds 30 seconds
         if (totalTime > THRESHOLD_MS) {
             pipelineTracer.logThresholdExceeded(correlationId, totalTime);
         }

@@ -96,13 +96,10 @@ async function dispatchWriteTool(
   toolName: string,
   args: Record<string, unknown>
 ): Promise<string> {
-  // Extract namespace for RBAC validation
   const namespace = typeof args.namespace === 'string' ? args.namespace : '';
 
-  // RBAC gate: validates namespace authorization (throws McpToolError on deny)
   authorizeWriteOperation(toolName, namespace);
 
-  // Idempotency: check cache if correlationId is provided
   const correlationId = typeof args.correlationId === 'string' ? args.correlationId : undefined;
   if (correlationId) {
     const cacheKey = buildCacheKey(correlationId, toolName);
@@ -112,7 +109,6 @@ async function dispatchWriteTool(
     }
   }
 
-  // Dispatch to the appropriate write tool handler
   let result: string;
   switch (toolName) {
     case 'restart_deployment':
@@ -131,7 +127,6 @@ async function dispatchWriteTool(
       );
   }
 
-  // Store in idempotency cache on success
   if (correlationId) {
     const cacheKey = buildCacheKey(correlationId, toolName);
     setCache(cacheKey, result);
@@ -144,7 +139,6 @@ async function dispatchWriteTool(
  * Handles a raw JSON string as a JSON-RPC 2.0 request and returns the response.
  */
 export async function handleJsonRpcRequest(rawBody: string): Promise<JsonRpcResponse> {
-  // Step 1: Parse JSON
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawBody);
@@ -152,7 +146,6 @@ export async function handleJsonRpcRequest(rawBody: string): Promise<JsonRpcResp
     return createErrorResponse(null, JSON_RPC_ERRORS.PARSE_ERROR, 'Parse error: invalid JSON');
   }
 
-  // Step 2: Validate JSON-RPC 2.0 structure
   if (!isValidJsonRpcRequest(parsed)) {
     return createErrorResponse(null, JSON_RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: not a valid JSON-RPC 2.0 request');
   }
@@ -160,19 +153,16 @@ export async function handleJsonRpcRequest(rawBody: string): Promise<JsonRpcResp
   const request = parsed;
   const id = request.id;
 
-  // Step 3: Validate method is "tools/call"
   if (request.method !== 'tools/call') {
     return createErrorResponse(id, JSON_RPC_ERRORS.METHOD_NOT_FOUND, `Method '${request.method}' not found`);
   }
 
-  // Step 4: Validate params and tool name
   if (!request.params || typeof request.params.name !== 'string') {
     return createErrorResponse(id, JSON_RPC_ERRORS.INVALID_REQUEST, 'Invalid Request: params.name is required');
   }
 
   const toolName = request.params.name;
 
-  // Step 5: Check tool whitelist
   if (!isWhitelistedTool(toolName)) {
     const allowed = TOOL_WHITELIST.join(', ');
     return createErrorResponse(
@@ -182,7 +172,6 @@ export async function handleJsonRpcRequest(rawBody: string): Promise<JsonRpcResp
     );
   }
 
-  // Step 6: Dispatch to appropriate handler (read vs write path)
   const args = request.params.arguments || {};
   try {
     let resultText: string;

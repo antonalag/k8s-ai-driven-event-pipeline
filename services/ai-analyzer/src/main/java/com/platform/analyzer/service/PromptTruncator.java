@@ -53,7 +53,6 @@ public class PromptTruncator {
         int eventsBytes = byteSize(podEvents);
         int logsBytes = byteSize(podLogs);
 
-        // Account for section headers overhead
         int headerOverhead = computeHeaderOverhead(podDescription, podEvents, podLogs);
         int totalMcpBytes = descriptionBytes + eventsBytes + logsBytes + headerOverhead;
 
@@ -64,7 +63,7 @@ public class PromptTruncator {
         log.debug("MCP context ({} bytes) exceeds remaining budget ({} bytes). Applying truncation.",
                 totalMcpBytes, remainingBudget);
 
-        // If pod description alone exceeds remaining budget, truncate it and omit events/logs
+        // Pod description alone exceeds remaining budget — truncate it, omit events/logs
         int descHeaderOverhead = computeHeaderOverhead(podDescription, null, null);
         if (descriptionBytes + descHeaderOverhead > remainingBudget) {
             if (podDescription != null) {
@@ -76,16 +75,14 @@ public class PromptTruncator {
             return EnrichedContext.EMPTY;
         }
 
-        // Budget remaining after preserving pod description in full
         int budgetAfterDescription = remainingBudget - descriptionBytes - descHeaderOverhead;
 
-        // Adjust for events and logs header overhead
         int eventsHeaderBytes = podEvents != null ? sectionHeaderBytes("--- EVENTS ---") : 0;
         int logsHeaderBytes = podLogs != null ? sectionHeaderBytes("--- LOGS ---") : 0;
 
         int availableForEventsAndLogs = budgetAfterDescription - eventsHeaderBytes - logsHeaderBytes;
 
-        // Step 1: Truncate logs first (oldest lines removed from top)
+        // Truncate logs first (oldest lines removed from top), then events if needed
         String truncatedLogs = podLogs;
         String truncatedEvents = podEvents;
 
@@ -96,12 +93,9 @@ public class PromptTruncator {
             if (budgetForLogs > 0 && truncatedLogs != null) {
                 truncatedLogs = truncateLogsFromOldest(truncatedLogs, budgetForLogs);
             } else if (budgetForLogs <= 0) {
-                // Logs must be completely removed
                 truncatedLogs = null;
-                // Recalculate available for events (since logs header is gone)
                 int revisedAvailable = budgetAfterDescription - eventsHeaderBytes;
 
-                // Step 2: Truncate events if still over
                 if (eventsBytes > revisedAvailable && truncatedEvents != null) {
                     truncatedEvents = truncateEventsFromOldest(truncatedEvents, revisedAvailable);
                 }
@@ -135,7 +129,6 @@ public class PromptTruncator {
         }
 
         String[] lines = logs.split("\n");
-        // Build from newest (bottom) upward
         StringBuilder result = new StringBuilder();
         int currentBytes = 0;
 
@@ -225,7 +218,6 @@ public class PromptTruncator {
     }
 
     private int sectionHeaderBytes(String headerLabel) {
-        // Format: "\n" + header + "\n" + content + "\n"
         return byteSize("\n" + headerLabel + "\n");
     }
 

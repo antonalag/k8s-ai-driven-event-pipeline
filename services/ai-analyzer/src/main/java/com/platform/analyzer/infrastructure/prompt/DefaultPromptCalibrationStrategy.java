@@ -54,10 +54,8 @@ public class DefaultPromptCalibrationStrategy implements PromptCalibrationStrate
     public String buildCalibratedPrompt(KubernetesEvent event, EnrichedContext context) {
         StringBuilder instructions = new StringBuilder();
 
-        // Base calibration rules always apply
         instructions.append(BASE_CALIBRATION.formatted(event.podName(), event.namespace()));
 
-        // Detect failure typology from context and event
         String failureType = detectFailureType(event, context);
 
         switch (failureType) {
@@ -71,7 +69,6 @@ public class DefaultPromptCalibrationStrategy implements PromptCalibrationStrate
     }
 
     private String detectFailureType(KubernetesEvent event, EnrichedContext context) {
-        // Check enriched context for failure indicators
         if (context != null && context.podDescription() != null) {
             String desc = context.podDescription();
             if (desc.contains("CrashLoopBackOff")) return "CrashLoopBackOff";
@@ -84,7 +81,6 @@ public class DefaultPromptCalibrationStrategy implements PromptCalibrationStrate
             if (events.contains("OOMKilled")) return "OOMKilled";
             if (events.contains("ImagePullBackOff")) return "ImagePullBackOff";
         }
-        // Fallback: check pod name for chaos-type hints
         String podName = event.podName();
         if (podName.contains("crashloop")) return "CrashLoopBackOff";
         if (podName.contains("oomkilled") || podName.contains("oom")) return "OOMKilled";

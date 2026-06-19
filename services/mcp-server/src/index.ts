@@ -66,7 +66,6 @@ function requestHandler(req: IncomingMessage, res: ServerResponse): void {
     return;
   }
 
-  // JSON-RPC endpoint on / or /rpc
   if (url === '/' || url === '/rpc') {
     if (method === 'POST') {
       handleRpcPost(req, res).catch((err) => {
@@ -94,7 +93,6 @@ export function main(): void {
   });
 }
 
-// Start the server
 main();
 
 export { server, MCP_MODE, MCP_PORT, TOOL_WHITELIST };
