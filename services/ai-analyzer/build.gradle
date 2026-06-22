@@ -21,6 +21,9 @@ dependencies {
     // Spring Boot web — required for RestClient (Ollama HTTP calls) and @ConfigurationProperties
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    // Spring Boot Actuator — health endpoint for container probes
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // Jakarta Bean Validation — required for @NotBlank on @ConfigurationProperties records
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 

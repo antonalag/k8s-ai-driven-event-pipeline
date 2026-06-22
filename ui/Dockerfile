@@ -26,6 +26,7 @@ RUN npm ci
 COPY src/ ./src/
 COPY public/ ./public/
 COPY index.html tsconfig.json vite.config.ts tailwind.config.ts postcss.config.mjs ./
+COPY .env* ./
 
 # Produce production static assets
 RUN npm run build

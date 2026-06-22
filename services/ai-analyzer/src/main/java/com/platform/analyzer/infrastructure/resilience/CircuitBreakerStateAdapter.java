@@ -3,6 +3,7 @@ package com.platform.analyzer.infrastructure.resilience;
 import com.platform.analyzer.domain.ports.CircuitBreakerStatePort;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,7 +17,8 @@ public class CircuitBreakerStateAdapter implements CircuitBreakerStatePort {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public CircuitBreakerStateAdapter(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerStateAdapter(
+            @Qualifier("mcpCircuitBreakerRegistry") CircuitBreakerRegistry circuitBreakerRegistry) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 

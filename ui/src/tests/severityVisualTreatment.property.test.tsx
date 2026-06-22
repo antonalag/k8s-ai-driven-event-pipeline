@@ -1,5 +1,5 @@
 /**
- * Feature: ui-stitch-visual-integration, Property 3: Severity-driven visual treatment
+ * Feature: ui-observability-dashboard, Property 3: Severity-driven visual treatment
  *
  * **Validates: Requirements 5.2, 5.3**
  *

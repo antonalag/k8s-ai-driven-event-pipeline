@@ -1,7 +1,8 @@
 import type { AiAnalysisResponse, ProblemDetail } from '../types/api';
 import { parseProblemDetail } from './parseProblemDetail';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const envBase = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = (envBase && envBase !== 'undefined') ? envBase : '';
 
 /**
  * Typed error wrapping an RFC 7807 ProblemDetail response.

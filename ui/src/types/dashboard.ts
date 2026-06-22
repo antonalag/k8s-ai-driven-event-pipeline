@@ -1,6 +1,6 @@
 /**
  * Dashboard-specific types, interfaces, and style constant mappings
- * for the Stitch Visual Integration layer.
+ * for the Observability Dashboard integration layer.
  */
 
 // --- Navigation Types ---

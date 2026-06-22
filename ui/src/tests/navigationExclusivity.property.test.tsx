@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { NavItemId } from '../types/dashboard';
 import Sidebar from '../components/Sidebar';
 
-// Feature: ui-stitch-visual-integration, Property 1: Navigation exclusivity
+// Feature: ui-observability-dashboard, Property 1: Navigation exclusivity
 
 /**
  * **Validates: Requirements 3.4**

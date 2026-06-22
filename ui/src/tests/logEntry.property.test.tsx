@@ -1,5 +1,5 @@
 /**
- * Feature: ui-stitch-visual-integration, Property 2: Log entry structural completeness
+ * Feature: ui-observability-dashboard, Property 2: Log entry structural completeness
  *
  * **Validates: Requirements 5.1**
  *

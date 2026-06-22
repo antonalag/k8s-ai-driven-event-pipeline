@@ -92,7 +92,14 @@ services:
           --topic k8s-pod-events \
           --partitions 3 \
           --replication-factor 1
-        echo "Topic k8s-pod-events created successfully."
+        echo "Creating topic ai-analysis-events..."
+        kafka-topics --bootstrap-server kafka:29092 \
+          --create \
+          --if-not-exists \
+          --topic ai-analysis-events \
+          --partitions 3 \
+          --replication-factor 1
+        echo "Topics created successfully."
     restart: "no"
     networks:
       - platform-net
@@ -111,4 +118,4 @@ volumes:
 
 networks:
   platform-net:
-    external: true
+    driver: bridge

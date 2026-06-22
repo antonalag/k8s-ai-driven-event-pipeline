@@ -12,7 +12,7 @@ The platform implements **defense-in-depth resilience** via three independent ci
 
 ```bash
 docker compose -f deployments/docker-compose.yaml stop mcp-server
-# Then click [Apply Recommended Fix] in Stitch UI
+# Then click [Apply Recommended Fix] in the UI
 ```
 
 ### Code Path
@@ -34,7 +34,7 @@ UI → POST /api/v1/remediations
 | **mutationCircuitBreaker** | Records the failure. After 3 failures (minimumNumberOfCalls), trips to OPEN state |
 | **ResilientRemediationPortAdapter** | Catches `CallNotPermittedException` → returns `RemediationResult.Failure("fix_container_image", "CIRCUIT_OPEN", "Mutation circuit breaker is open — cluster write operations temporarily suspended")` |
 | **RemediationController** | Maps `CIRCUIT_OPEN` → HTTP 503 + RFC 7807 ProblemDetail with `type: urn:problem-type:mutation-circuit-breaker-open` |
-| **Stitch UI** | TanStack Mutation `onError` → RFC 7807 parser → renders error banner: "Mutation Circuit Breaker Open" |
+| **Observability UI** | TanStack Mutation `onError` → RFC 7807 parser → renders error banner: "Mutation Circuit Breaker Open" |
 
 ### Expected Response to UI
 
@@ -101,7 +101,7 @@ After unpause:
 | T+30s | Kafka resumed. Producer buffer flushes. |
 | T+32s | ai-analyzer consumes event from `k8s-pod-events`. |
 | T+35-60s | AI diagnosis completes. Result published to `ai-analysis-events`. |
-| T+62s | Stitch UI shows diagnosis on next poll cycle. |
+| T+62s | Observability UI shows diagnosis on next poll cycle. |
 
 ### Verdict: PASS
 
@@ -145,7 +145,7 @@ PodEventConsumer.onPodEvent()
 | **aiCircuitBreaker** | Records `ResourceAccessException` as failure. After threshold (50% of 10 calls), trips to OPEN. |
 | **ResilientAiLanguageModelAdapter** | Catches exception → returns `buildDegradedAnalysis()` with verdict=`DEGRADED`, rootCause="AI provider unavailable (circuit breaker open)", actions=["Retry after provider recovery"] |
 | **PodEventConsumer** | Receives the degraded AiAnalysis → publishes to `ai-analysis-events` topic → persisted in OpenSearch |
-| **Stitch UI** | Renders the card with verdict `DEGRADED` — shows raw K8s event data + "AI provider unavailable" message. No action button (no parseable kubectl command in degraded actions). |
+| **Observability UI** | Renders the card with verdict `DEGRADED` — shows raw K8s event data + "AI provider unavailable" message. No action button (no parseable kubectl command in degraded actions). |
 
 ### Expected Degraded Response
 
@@ -178,7 +178,7 @@ PodEventConsumer.onPodEvent()
 # Deploy and then delete the target before clicking remediation
 kubectl apply -f deployments/chaos/golden-path-deployment.yaml
 kubectl delete deployment golden-path-app -n chaos-validation
-# Now click [Apply Recommended Fix] in Stitch UI
+# Now click [Apply Recommended Fix] in the UI
 ```
 
 ### Code Path (MCP_MODE=live)
@@ -206,7 +206,7 @@ In mock mode, the MCP server returns synthetic success. To test this path in moc
 | **RemediationAdapter** | Parses `response.isError()=true` → maps code -32001 to `"RESOURCE_NOT_FOUND"` → returns `RemediationResult.Failure("fix_container_image", "RESOURCE_NOT_FOUND", "Resource not found...")` |
 | **mutationCircuitBreaker** | Does **NOT** record this as a failure (only `RemediationException` and `ResourceAccessException` are recorded). Client errors don't trip the breaker. |
 | **RemediationController** | Maps `RESOURCE_NOT_FOUND` → HTTP 404 + RFC 7807 ProblemDetail |
-| **Stitch UI** | Error banner: "Resource Not Found" with detail message |
+| **Observability UI** | Error banner: "Resource Not Found" with detail message |
 
 ### Expected Response to UI
 

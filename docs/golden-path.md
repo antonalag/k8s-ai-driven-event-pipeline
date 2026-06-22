@@ -24,7 +24,7 @@ It exercises the full pipeline end-to-end: chaos injection → event detection �
 - Produces a clear, deterministic failure visible within seconds.
 - The `fix_container_image` MCP tool provides an instant, verifiable fix.
 - Recovery is immediate — no restart delay, no OOM ambiguity.
-- Visual confirmation in Stitch UI: pod transitions from red to green in one action.
+- Visual confirmation in the Observability UI: pod transitions from red to green in one action.
 
 ---
 
@@ -63,7 +63,7 @@ It exercises the full pipeline end-to-end: chaos injection → event detection �
 │  STEP 4: Persistence & UI Rendering                                          │
 │  AiAnalysisEvent published to Kafka topic: ai-analysis-events                │
 │  Persisted to OpenSearch index: ai-analysis-reports                           │
-│  Stitch UI polls GET /api/v1/analyses → renders diagnosis card               │
+│  Observability UI polls GET /api/v1/analyses → renders diagnosis card               │
 │  Card shows: CRITICAL_FAILURE, root cause, recommended fix_container_image    │
 └────────────────────────────────────┬────────────────────────────────────────┘
                                      │
@@ -123,7 +123,7 @@ It exercises the full pipeline end-to-end: chaos injection → event detection �
 |---|-------|----------------|
 | 1 | Pod status after chaos injection | `ImagePullBackOff` or `ErrImagePull` |
 | 2 | Kafka topic `k8s-pod-events` receives event | Message with status=Failed |
-| 3 | AI diagnosis in Stitch UI | verdict=CRITICAL_FAILURE with image fix recommendation |
+| 3 | AI diagnosis in Observability UI | verdict=CRITICAL_FAILURE with image fix recommendation |
 | 4 | MCP enrichment visible | `mcpToolsUsed: [describe_pod, get_events, get_logs]` |
 | 5 | Execute button renders | Parseable action → enabled button |
 | 6 | Post-remediation pod status | `Running` within 30 seconds |
@@ -143,7 +143,7 @@ kubectl apply -f deployments/chaos/golden-path-deployment.yaml
 # Observe failure
 kubectl get pods -n chaos-validation -w
 
-# Open Stitch UI
+# Open Observability UI
 open http://localhost:3000
 
 # After clicking [Apply Recommended Fix] in UI, verify recovery:

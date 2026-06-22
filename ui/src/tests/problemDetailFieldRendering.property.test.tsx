@@ -1,4 +1,4 @@
-// Feature: ui-stitch-visual-integration, Property 4: ProblemDetail field rendering
+// Feature: ui-observability-dashboard, Property 4: ProblemDetail field rendering
 
 /**
  * **Validates: Requirements 6.3**
