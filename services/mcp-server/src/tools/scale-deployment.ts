@@ -35,6 +35,7 @@ function getMockResult(params: ScaleDeploymentParams): WriteToolResult {
 
 /**
  * Executes a deployment scale operation via the Kubernetes API.
+ * Uses JSON Patch (RFC 6902) — the default patch format of @kubernetes/client-node.
  */
 async function executeLiveScale(params: ScaleDeploymentParams): Promise<WriteToolResult> {
   try {
@@ -45,25 +46,26 @@ async function executeLiveScale(params: ScaleDeploymentParams): Promise<WriteToo
     const appsApi = kc.makeApiClient(AppsV1Api);
     const timestamp = new Date().toISOString();
 
-    // Read current replicas for audit
+    // Read current replicas for audit trail
     const current = await appsApi.readNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,
     });
     const previousReplicas = current.spec?.replicas ?? 1;
 
-    // Patch replicas
-    const patch = {
-      spec: {
-        replicas: params.replicas,
+    // JSON Patch array
+    const jsonPatch = [
+      {
+        op: 'replace' as const,
+        path: '/spec/replicas',
+        value: params.replicas,
       },
-    };
+    ];
 
     await appsApi.patchNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,
-      body: patch,
-      fieldManager: 'mcp-server',
+      body: jsonPatch as unknown as Record<string, unknown>,
     });
 
     return {
@@ -105,10 +107,6 @@ async function executeLiveScale(params: ScaleDeploymentParams): Promise<WriteToo
 
 /**
  * Handler for the scale_deployment MCP write-back tool.
- *
- * @param args - Raw arguments from JSON-RPC request.
- * @returns JSON-stringified WriteToolResult.
- * @throws McpToolError with appropriate error code on failure.
  */
 export async function handleScaleDeployment(args: Record<string, unknown>): Promise<string> {
   const parseResult = ScaleDeploymentSchema.safeParse(args);

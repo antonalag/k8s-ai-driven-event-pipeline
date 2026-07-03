@@ -8,15 +8,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * REST controller exposing the AI analysis query endpoint.
- * Delegates all business logic to {@link AiAnalysisQueryPort}.
+ * Returns only the latest analysis per pod, excluding pods whose
+ * latest verdict is HEALTHY or DEGRADED (resolved or fallback states).
  */
 @RestController
 @RequestMapping("/api/v1/analyses")
 public class AiAnalysisQueryController {
+
+    private static final List<String> EXCLUDED_VERDICTS = List.of("HEALTHY", "DEGRADED");
 
     private final AiAnalysisQueryPort queryPort;
 
@@ -39,8 +45,29 @@ public class AiAnalysisQueryController {
             results = queryPort.findAll();
         }
 
-        return results.stream()
+        return latestPerPod(results).stream()
                 .map(AiAnalysisResponse::from)
+                .toList();
+    }
+
+    /**
+     * Reduces the result set to only the most recent analysis per pod.
+     * Excludes pods whose latest verdict indicates a resolved state (HEALTHY, DEGRADED).
+     */
+    private List<AiAnalysisView> latestPerPod(List<AiAnalysisView> analyses) {
+        // Group by podName, keep only the most recent entry per pod
+        Map<String, AiAnalysisView> latestByPod = analyses.stream()
+                .collect(Collectors.toMap(
+                        AiAnalysisView::podName,
+                        view -> view,
+                        (existing, replacement) ->
+                                existing.analyzedAt().isAfter(replacement.analyzedAt()) ? existing : replacement
+                ));
+
+        // Filter out pods whose latest verdict is resolved
+        return latestByPod.values().stream()
+                .filter(view -> !EXCLUDED_VERDICTS.contains(view.verdict()))
+                .sorted(Comparator.comparing(AiAnalysisView::analyzedAt).reversed())
                 .toList();
     }
 }

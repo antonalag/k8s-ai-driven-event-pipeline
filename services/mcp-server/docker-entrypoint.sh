@@ -1,11 +1,12 @@
 #!/bin/sh
 # ──────────────────────────────────────────────────────────────────────────────
-# k8s-collector Docker entrypoint
+# MCP Server Docker entrypoint
 # Rewrites kubeconfig server addresses to be reachable from inside Docker.
+# Required for MCP_MODE=live to connect to the K8s API.
 # ──────────────────────────────────────────────────────────────────────────────
 set -e
 
-KUBE_SRC="/home/appuser/.kube/config"
+KUBE_SRC="/home/node/.kube/config"
 KUBE_DST="/tmp/.kube/config"
 
 if [ -f "$KUBE_SRC" ]; then
@@ -19,10 +20,14 @@ if [ -f "$KUBE_SRC" ]; then
       -e '/server:/a\    insecure-skip-tls-verify: true' \
       "$KUBE_SRC" > "$KUBE_DST"
   export KUBECONFIG="$KUBE_DST"
-  echo "k8s-collector: kubeconfig rewritten for Docker networking → $KUBE_DST"
+  # Node.js fetch needs this to skip TLS verification for self-signed k3d certs
+  export NODE_TLS_REJECT_UNAUTHORIZED=0
+  echo "mcp-server: kubeconfig rewritten for Docker networking → $KUBE_DST"
 else
-  echo "k8s-collector: WARNING — no kubeconfig found at $KUBE_SRC"
-  echo "k8s-collector: The Informer will fail to connect to the K8s API."
+  if [ "$MCP_MODE" = "live" ]; then
+    echo "mcp-server: WARNING — MCP_MODE=live but no kubeconfig found at $KUBE_SRC"
+    echo "mcp-server: Read tools will fail. Falling back to error responses."
+  fi
 fi
 
-exec java -jar /app/app.jar "$@"
+exec node dist/index.js "$@"

@@ -5,13 +5,14 @@ interface RecommendedActionBlockProps {
   actions: string[];
   correlationId?: string;
   namespace?: string;
+  onRemediationSuccess?: () => void;
 }
 
-export function RecommendedActionBlock({ actions, correlationId, namespace }: RecommendedActionBlockProps) {
+export function RecommendedActionBlock({ actions, correlationId, namespace, onRemediationSuccess }: RecommendedActionBlockProps) {
   if (!actions || actions.length === 0) return null;
 
   return (
-    <div className="space-y-2" data-testid="recommended-actions">
+    <div className="kd-space-y-2" data-testid="recommended-actions">
       {actions.map((action, index) => (
         <ActionItem
           key={index}
@@ -19,6 +20,7 @@ export function RecommendedActionBlock({ actions, correlationId, namespace }: Re
           index={index}
           correlationId={correlationId}
           namespace={namespace}
+          onRemediationSuccess={onRemediationSuccess}
         />
       ))}
     </div>
@@ -30,11 +32,13 @@ function ActionItem({
   index,
   correlationId,
   namespace,
+  onRemediationSuccess,
 }: {
   action: string;
   index: number;
   correlationId?: string;
   namespace?: string;
+  onRemediationSuccess?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -53,14 +57,17 @@ function ActionItem({
   const handleExecutionEnd = useCallback(() => setIsExecuting(false), []);
 
   return (
-    <div className="relative group" data-testid={`action-block-${index}`}>
-      <pre className="bg-gray-900 text-green-400 text-sm font-mono p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-all">
+    <div className="kd-relative" data-testid={`action-block-${index}`}>
+      {/* Code block */}
+      <pre className="kd-bg-surface kd-border kd-border-outline-variant kd-rounded kd-p-3 kd-font-mono kd-text-code-sm kd-text-primary kd-overflow-x-auto kd-whitespace-pre-wrap kd-break-all">
         <code>{action}</code>
       </pre>
-      <div className="flex items-center gap-2 mt-1">
+
+      {/* Action buttons row */}
+      <div className="kd-flex kd-items-center kd-gap-2 kd-mt-1">
         <button
           onClick={handleCopy}
-          className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
+          className="kd-px-2 kd-py-1 kd-font-sans kd-text-code-sm kd-border kd-border-outline-variant kd-rounded kd-text-on-surface-variant hover:kd-border-primary hover:kd-text-primary kd-transition-colors kd-duration-200"
           aria-label={`Copy action ${index + 1}`}
           data-testid={`copy-button-${index}`}
         >
@@ -74,12 +81,14 @@ function ActionItem({
             namespace={namespace}
             onExecutionStart={handleExecutionStart}
             onExecutionEnd={handleExecutionEnd}
+            onSuccess={onRemediationSuccess}
           />
         )}
       </div>
 
+      {/* Execution overlay */}
       {isExecuting && (
-        <div className="absolute inset-0 bg-gray-900/20 rounded-md pointer-events-none" />
+        <div className="kd-absolute kd-inset-0 kd-bg-surface/30 kd-rounded kd-pointer-events-none" />
       )}
     </div>
   );

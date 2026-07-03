@@ -35,7 +35,7 @@ deployments/
 | `kafka-init` | Same as above | — | One-shot topic creator (`k8s-pod-events`, `ai-analysis-events`, 3 partitions each) |
 | `opensearch` | `opensearchproject/opensearch:2.18.0` | 9200 | AI analysis report persistence and historical querying |
 | `k8s-collector` | Built from `services/k8s-collector/Dockerfile` | 8081 | Kubernetes Informer → Kafka event producer |
-| `mcp-server` | Built from `services/mcp-server/Dockerfile` | 3001 | MCP intelligence layer (JSON-RPC 2.0) |
+| `mcp-server` | Built from `services/mcp-server/Dockerfile` | 3001 | MCP intelligence layer — live K8s context via JSON-RPC 2.0 |
 | `ai-analyzer` | Built from `services/ai-analyzer/Dockerfile` | 8082 | AI reasoning engine + REST API |
 | `observability-ui` | Built from `ui/Dockerfile` | 3000 | Frontend dashboard (Nginx) |
 
@@ -43,7 +43,7 @@ deployments/
 
 All services communicate over a shared `platform-net` bridge network. The UI's Nginx reverse-proxy routes `/api/` to `ai-analyzer:8082` internally, eliminating CORS in container mode.
 
-The `k8s-collector` mounts `~/.kube/config` read-only and uses a startup script that rewrites `0.0.0.0`/`127.0.0.1` server addresses to `host.docker.internal` for Docker network reachability. The `extra_hosts: host.docker.internal:host-gateway` directive ensures the host machine is resolvable from inside the container.
+The `k8s-collector` and `mcp-server` both mount `~/.kube/config` read-only and use startup scripts that rewrite `0.0.0.0`/`127.0.0.1` server addresses to `host.docker.internal` for Docker network reachability. The `extra_hosts: host.docker.internal:host-gateway` directive ensures the host machine is resolvable from inside containers. TLS hostname verification is skipped (k3d certs don't include `host.docker.internal` as SAN).
 
 ### Kafka Configuration (KRaft)
 

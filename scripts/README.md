@@ -36,8 +36,8 @@ bash scripts/bootstrap.sh --check
 | Stage | Validation |
 |-------|-----------|
 | **1/4 — Environment Configuration** | Ensures `.env` exists (copies from `.env.example` if missing), loads environment variables |
-| **2/4 — CLI Dependencies** | Verifies `docker`, `docker compose` (plugin), `kubectl`, and local K8s runtime (k3d/kind/minikube) |
-| **3/4 — AI Provider Validation** | For `ollama`: checks reachability + model availability (auto-pulls if missing). For `byok`: validates endpoint connectivity + API key authentication |
+| **2/4 — CLI Dependencies** | Verifies `docker`, `docker compose` (plugin), `kubectl`, and local K8s runtime (k3d/kind/minikube). Detects UFW firewall and auto-adds Docker subnet allow rule if missing |
+| **3/4 — AI Provider Validation** | For `ollama`: checks reachability, verifies bind address is `0.0.0.0` (auto-restarts via systemd if bound to `127.0.0.1`), and model availability (auto-pulls if missing). For `byok`: validates endpoint connectivity + API key authentication |
 | **4/4 — Pre-flight Summary** | Gates on accumulated errors. Aborts with actionable messages if any check fails |
 
 ### Exit Behavior

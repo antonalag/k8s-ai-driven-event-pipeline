@@ -10,13 +10,14 @@ interface ExecuteActionButtonProps {
   namespace: string;
   onExecutionStart: () => void;
   onExecutionEnd: () => void;
+  onSuccess?: () => void;
 }
 
 /**
  * Renders an "Execute" button for a recommended action.
  * Parses the action text to determine if automated execution is possible.
  * Shows loading spinner during execution, and success/error banners after.
- * Disables with tooltip when action text cannot be parsed.
+ * Calls onSuccess after successful remediation (triggers card dismissal).
  */
 export function ExecuteActionButton({
   actionText,
@@ -24,6 +25,7 @@ export function ExecuteActionButton({
   namespace,
   onExecutionStart,
   onExecutionEnd,
+  onSuccess,
 }: ExecuteActionButtonProps) {
   const { mutate, isPending, isSuccess, isError, data, error, reset } = useRemediation();
 
@@ -47,11 +49,14 @@ export function ExecuteActionButton({
     };
 
     mutate(request, {
+      onSuccess: () => {
+        if (onSuccess) onSuccess();
+      },
       onSettled: () => {
         onExecutionEnd();
       },
     });
-  }, [actionText, correlationId, namespace, mutate, onExecutionStart, onExecutionEnd]);
+  }, [actionText, correlationId, namespace, mutate, onExecutionStart, onExecutionEnd, onSuccess]);
 
   const handleRetry = useCallback(() => {
     reset();
@@ -60,7 +65,6 @@ export function ExecuteActionButton({
 
   return (
     <div data-testid="execute-action-wrapper">
-      {/* Execute button */}
       {!isSuccess && !isError && (
         <button
           onClick={handleExecute}
@@ -68,19 +72,17 @@ export function ExecuteActionButton({
           title={disabledReason ?? undefined}
           aria-label={isDisabled ? disabledReason ?? 'Action not supported' : 'Execute action'}
           data-testid="execute-action-button"
-          className={`
-            mt-1 px-3 py-1 text-xs font-medium rounded transition-colors
-            ${isDisabled
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          className={`kd-mt-1 kd-px-3 kd-py-1 kd-font-sans kd-text-code-sm kd-font-medium kd-rounded kd-transition-colors kd-duration-200 ${
+            isDisabled
+              ? 'kd-border kd-border-outline-variant kd-text-on-surface-variant kd-opacity-50 kd-cursor-not-allowed'
               : isPending
-                ? 'bg-blue-100 text-blue-600 cursor-wait'
-                : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-            }
-          `}
+                ? 'kd-border kd-border-primary kd-text-primary kd-cursor-wait'
+                : 'kd-bg-on-surface kd-text-surface hover:kd-bg-primary hover:kd-text-on-primary kd-cursor-pointer'
+          }`}
         >
           {isPending ? (
-            <span className="flex items-center gap-1">
-              <span className="inline-block w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <span className="kd-flex kd-items-center kd-gap-1">
+              <span className="kd-inline-block kd-w-3 kd-h-3 kd-border-2 kd-border-primary kd-border-t-transparent kd-rounded-full kd-animate-spin" />
               Executing...
             </span>
           ) : (
@@ -89,12 +91,10 @@ export function ExecuteActionButton({
         </button>
       )}
 
-      {/* Success banner */}
       {isSuccess && data && (
         <RemediationBanner variant="success" response={data} />
       )}
 
-      {/* Error banner */}
       {isError && error && (
         <RemediationBanner variant="error" error={error} onRetry={handleRetry} />
       )}

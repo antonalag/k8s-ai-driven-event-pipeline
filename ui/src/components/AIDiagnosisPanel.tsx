@@ -27,40 +27,37 @@ function AIDiagnosisPanel({
 
   return (
     <section
-      className="kd-col-span-12 kd-row-span-3 ai-panel-depth kd-rounded-xl ai-glow kd-flex kd-flex-col kd-overflow-hidden kd-relative"
+      className="kd-col-span-12 ai-panel-depth kd-rounded ai-glow kd-flex kd-flex-col kd-overflow-hidden"
       data-testid="ai-diagnosis-panel"
     >
-      {/* Violet gradient overlay */}
-      <div className="kd-absolute kd-inset-0 kd-bg-gradient-to-br kd-from-ai-violet/10 kd-via-transparent kd-to-transparent kd-pointer-events-none" />
-
       {/* Header */}
-      <div className="kd-flex kd-items-center kd-justify-between kd-px-5 kd-py-4 kd-border-b kd-border-white/5 kd-bg-white/5 kd-relative kd-z-10">
+      <div className="kd-flex kd-items-center kd-justify-between kd-px-4 kd-py-3 kd-border-b kd-border-ai-violet/20 kd-bg-surface-container-high">
         <div className="kd-flex kd-items-center kd-gap-3">
-          <div className="kd-w-8 kd-h-8 kd-rounded-lg kd-bg-ai-violet/20 kd-flex kd-items-center kd-justify-center kd-transition-all kd-duration-500 kd-group">
+          <div className="kd-w-7 kd-h-7 kd-rounded kd-bg-ai-violet/15 kd-flex kd-items-center kd-justify-center">
             <span
-              className="material-symbols-outlined kd-text-ai-violet"
+              className="material-symbols-outlined kd-text-ai-violet kd-text-base"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               auto_awesome
             </span>
           </div>
           <div>
-            <h2 className="kd-font-headline-sm kd-text-on-surface">Intelligent Diagnosis</h2>
-            <p className="kd-text-[11px] kd-text-ai-violet/80 kd-font-medium kd-tracking-wide kd-uppercase">
+            <h2 className="kd-font-sans kd-text-headline-sm kd-text-on-surface">Intelligent Diagnosis</h2>
+            <p className="kd-font-sans kd-text-label-caps kd-text-ai-violet kd-uppercase kd-tracking-widest">
               AI Insight Engine v2.4
             </p>
           </div>
         </div>
         <div className="kd-flex kd-flex-col kd-items-end kd-gap-1">
-          <div className="kd-flex kd-items-center kd-gap-3">
-            <span className="kd-text-[11px] kd-font-bold kd-text-zinc-400">ANALYSIS CONFIDENCE</span>
-            <span className="kd-text-ai-violet kd-font-bold kd-text-sm" data-testid="confidence-value">
+          <div className="kd-flex kd-items-center kd-gap-2">
+            <span className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant">CONFIDENCE</span>
+            <span className="kd-text-ai-violet kd-font-mono kd-font-bold kd-text-body-md" data-testid="confidence-value">
               {confidencePercent}
             </span>
           </div>
-          <div className="kd-w-48 kd-h-1.5 kd-bg-zinc-800 kd-rounded-full kd-overflow-hidden shimmer-mask">
+          <div className="kd-w-40 kd-h-1 kd-bg-outline-variant kd-rounded-full kd-overflow-hidden">
             <div
-              className="kd-h-full kd-bg-ai-violet kd-shadow-[0_0_10px_rgba(167,139,250,0.5)]"
+              className="kd-h-full kd-bg-ai-violet"
               style={{ width: confidencePercent }}
               data-testid="confidence-bar"
             />
@@ -69,38 +66,37 @@ function AIDiagnosisPanel({
       </div>
 
       {/* Content */}
-      <div className="kd-flex-1 kd-p-6 kd-grid kd-grid-cols-12 kd-gap-8 kd-relative kd-z-10 kd-overflow-auto">
+      <div className="kd-flex-1 kd-p-4 kd-grid kd-grid-cols-12 kd-gap-4 kd-overflow-auto">
         {/* Root Cause / Problem Detail */}
-        <div className="kd-col-span-7 kd-space-y-6">
+        <div className="kd-col-span-7 kd-space-y-4">
           {/* Problem Detail (RFC 7807) */}
-          <div className="kd-space-y-3">
-            <div className="kd-flex kd-items-center kd-gap-2 kd-text-zinc-400 kd-font-label-caps kd-text-[11px] kd-uppercase kd-tracking-widest">
+          <div className="kd-space-y-2">
+            <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
               <span className="material-symbols-outlined kd-text-sm">error_outline</span>
-              <span>Problem Detail (RFC 7807)</span>
+              Problem Detail (RFC 7807)
             </div>
-            <div className="kd-bg-black/40 kd-p-4 kd-border kd-border-white/5 kd-rounded-xl kd-transition-all kd-duration-500 hover:kd-border-white/10 hover:kd-bg-black/50">
-              <div className="kd-space-y-3">
-                <div className="kd-grid kd-grid-cols-[100px_1fr] kd-gap-x-4 kd-items-baseline">
-                  <span className="kd-text-zinc-500 kd-font-code-sm kd-text-[12px]">Type</span>
-                  <span className="kd-text-ai-violet kd-font-code-sm kd-text-[12px] kd-truncate" data-testid="problem-type">
+            <div className="kd-bg-surface kd-p-4 kd-border kd-border-outline-variant kd-rounded">
+              <div className="kd-space-y-2 kd-font-mono kd-text-code-sm">
+                <div className="kd-grid kd-grid-cols-[80px_1fr] kd-gap-x-3 kd-items-baseline">
+                  <span className="kd-text-on-surface-variant">Type</span>
+                  <span className="kd-text-ai-violet kd-truncate" data-testid="problem-type">
                     {problemDetail.type}
                   </span>
                 </div>
-                <div className="kd-grid kd-grid-cols-[100px_1fr] kd-gap-x-4 kd-items-baseline">
-                  <span className="kd-text-zinc-500 kd-font-code-sm kd-text-[12px]">Issue</span>
+                <div className="kd-grid kd-grid-cols-[80px_1fr] kd-gap-x-3 kd-items-baseline">
+                  <span className="kd-text-on-surface-variant">Issue</span>
                   <span className="kd-text-on-surface kd-font-bold" data-testid="problem-issue">
                     {problemDetail.issue}
                   </span>
                 </div>
-                <div className="kd-grid kd-grid-cols-[100px_1fr] kd-gap-x-4 kd-items-baseline">
-                  <span className="kd-text-zinc-500 kd-font-code-sm kd-text-[12px]">Status</span>
-                  <span className="kd-text-error kd-font-bold kd-flex kd-items-center kd-gap-1.5" data-testid="problem-status">
-                    <span className="material-symbols-outlined kd-text-sm kd-animate-pulse-soft">wifi_off</span>
+                <div className="kd-grid kd-grid-cols-[80px_1fr] kd-gap-x-3 kd-items-baseline">
+                  <span className="kd-text-on-surface-variant">Status</span>
+                  <span className="kd-text-secondary kd-font-bold" data-testid="problem-status">
                     {problemDetail.status}
                   </span>
                 </div>
-                <div className="kd-mt-3 kd-pt-3 kd-border-t kd-border-white/5">
-                  <p className="kd-text-on-surface-variant kd-leading-relaxed kd-text-sm" data-testid="problem-description">
+                <div className="kd-mt-2 kd-pt-2 kd-border-t kd-border-outline-variant">
+                  <p className="kd-font-sans kd-text-body-md kd-text-on-surface-variant kd-leading-relaxed" data-testid="problem-description">
                     {problemDetail.description}
                   </p>
                 </div>
@@ -108,31 +104,31 @@ function AIDiagnosisPanel({
             </div>
           </div>
 
-          {/* Correlated Infrastructure Events */}
-          <div className="kd-space-y-3">
-            <div className="kd-flex kd-items-center kd-gap-2 kd-text-zinc-400 kd-font-label-caps kd-text-[11px] kd-uppercase kd-tracking-widest">
+          {/* Correlated Events */}
+          <div className="kd-space-y-2">
+            <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
               <span className="material-symbols-outlined kd-text-sm">hub</span>
-              <span>Correlated Infrastructure Events</span>
+              Correlated Infrastructure Events
             </div>
-            <div className="kd-grid kd-grid-cols-1 kd-gap-2" data-testid="correlated-events">
+            <div className="kd-space-y-1" data-testid="correlated-events">
               {correlatedEvents.map((event, index) => (
                 <div
                   key={`${event.timeAgo}-${index}`}
-                  className="kd-flex kd-items-center kd-gap-4 kd-px-4 kd-py-2.5 kd-bg-zinc-800/30 kd-border kd-border-white/5 kd-rounded-lg kd-transition-all kd-duration-300 hover:kd-bg-zinc-800/50 hover:kd-translate-x-1 kd-cursor-default"
+                  className="kd-flex kd-items-center kd-gap-3 kd-px-3 kd-py-2 kd-border-b kd-border-outline-variant last:kd-border-b-0 hover:kd-bg-surface-container-high kd-transition-colors kd-duration-200"
                 >
                   <span
-                    className={`kd-text-[10px] kd-px-2 kd-py-0.5 kd-rounded kd-font-bold ${
+                    className={`kd-font-mono kd-text-label-caps kd-font-bold kd-shrink-0 ${
                       event.severity === 'error'
-                        ? 'kd-bg-error/20 kd-text-error'
+                        ? 'kd-text-secondary'
                         : event.severity === 'warning'
-                          ? 'kd-bg-tertiary/20 kd-text-tertiary'
-                          : 'kd-bg-ai-violet/20 kd-text-ai-violet'
+                          ? 'kd-text-tertiary'
+                          : 'kd-text-ai-violet'
                     }`}
                     data-testid="event-time-badge"
                   >
                     {event.timeAgo}
                   </span>
-                  <span className="kd-text-sm kd-text-zinc-300">{event.description}</span>
+                  <span className="kd-font-sans kd-text-body-md kd-text-on-surface-variant">{event.description}</span>
                 </div>
               ))}
             </div>
@@ -140,36 +136,36 @@ function AIDiagnosisPanel({
         </div>
 
         {/* Remediation Commands */}
-        <div className="kd-col-span-5 kd-flex kd-flex-col kd-gap-4">
-          <div className="kd-flex kd-items-center kd-gap-2 kd-text-zinc-400 kd-font-label-caps kd-text-[11px] kd-uppercase kd-tracking-widest kd-mb-1">
+        <div className="kd-col-span-5 kd-flex kd-flex-col kd-gap-3">
+          <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
             <span className="material-symbols-outlined kd-text-sm">magic_button</span>
-            <span>Guided Remediation Path</span>
+            Guided Remediation Path
           </div>
 
+          {/* Code block — Zinc-950 bg, code-sm */}
           <pre
-            className="kd-bg-zinc-900/80 kd-border kd-border-white/10 kd-p-4 kd-rounded-xl kd-font-code-sm kd-text-code-sm kd-text-on-surface kd-overflow-auto kd-whitespace-pre-wrap"
+            className="kd-flex-1 kd-bg-surface kd-border kd-border-outline-variant kd-p-4 kd-rounded kd-font-mono kd-text-code-sm kd-text-on-surface-variant kd-overflow-auto kd-whitespace-pre-wrap"
             data-testid="remediation-commands"
           >
             {commandsText}
           </pre>
 
-          <div className="kd-mt-auto kd-pt-4 kd-border-t kd-border-white/5">
-            <button
-              type="button"
-              onClick={handleCopyCommands}
-              className="kd-w-full kd-py-2.5 kd-bg-surface-container-lowest kd-border kd-border-outline-variant kd-text-on-surface-variant kd-font-bold kd-rounded-xl hover:kd-border-ai-violet/50 hover:kd-text-ai-violet kd-transition-all kd-duration-300 kd-flex kd-items-center kd-justify-center kd-gap-2"
-              data-testid="copy-commands-button"
-            >
-              <span className="material-symbols-outlined kd-text-sm">content_copy</span>
-              <span>
-                {copyStatus === 'copied'
-                  ? 'Copied!'
-                  : copyStatus === 'failed'
-                    ? 'Copy failed'
-                    : 'Copy Commands'}
-              </span>
-            </button>
-          </div>
+          {/* Copy button — secondary/ghost style */}
+          <button
+            type="button"
+            onClick={handleCopyCommands}
+            className="kd-w-full kd-py-2 kd-border kd-border-outline-variant kd-rounded kd-font-sans kd-text-body-md kd-font-medium kd-text-on-surface-variant hover:kd-border-ai-violet hover:kd-text-ai-violet kd-transition-colors kd-duration-200 kd-flex kd-items-center kd-justify-center kd-gap-2"
+            data-testid="copy-commands-button"
+          >
+            <span className="material-symbols-outlined kd-text-sm">content_copy</span>
+            <span>
+              {copyStatus === 'copied'
+                ? 'Copied!'
+                : copyStatus === 'failed'
+                  ? 'Copy failed'
+                  : 'Copy Commands'}
+            </span>
+          </button>
         </div>
       </div>
     </section>

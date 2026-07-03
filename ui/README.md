@@ -23,12 +23,12 @@ Observability Dashboard — Real-time Kubernetes failure diagnosis and 1-click r
 
 ## Responsibilities
 
-1. **Real-Time Polling** — TanStack Query fetches `GET /api/v1/analyses` at a 5-second interval, keeping the dashboard synchronized with the backend without WebSockets.
-2. **Diagnosis Rendering** — Displays AI analysis cards with structured fields: verdict, root cause, recommended actions, MCP tools used, and namespace/pod metadata.
-3. **1-Click Remediation** — `ExecuteActionButton` triggers `POST /api/v1/remediations` via TanStack Mutation hooks. Includes loading spinner, concurrent-action lock, and success/error banner rendering.
-4. **RFC 7807 Error Handling** — Parses `ProblemDetail` responses from the backend and renders structured error banners with type, title, status, and detail fields.
-5. **Filtering** — Namespace and pod name filters allow operators to narrow the analysis feed.
-6. **Responsive Layout** — Grid-based layout adapts from single-column mobile to multi-column desktop.
+1. **Real-Time Polling** — TanStack Query fetches `GET /api/v1/analyses` at a 5-second interval, keeping the dashboard synchronized with the backend.
+2. **Analysis Rendering** — Displays AI analysis cards with structured fields: verdict badge (color-coded with LED indicator), root cause analysis, and recommended actions.
+3. **1-Click Remediation** — `ExecuteActionButton` triggers `POST /api/v1/remediations` via TanStack Mutation hooks. Only enabled for parseable kubectl commands (`rollout restart`, `scale`, `set image`). Includes loading spinner, concurrent-action lock, and success/error banner.
+4. **RFC 7807 Error Handling** — Parses `ProblemDetail` responses from the backend and renders structured error banners.
+5. **DEGRADED Filtering** — Analyses with `verdict=DEGRADED` (circuit breaker fallback) are automatically hidden from the UI.
+6. **Action Parsing** — The `action-parser.ts` module detects which recommended actions are executable mutations and enables the Execute button accordingly.
 
 ---
 
@@ -37,27 +37,26 @@ Observability Dashboard — Real-time Kubernetes failure diagnosis and 1-click r
 ```
 src/
 ├── components/
-│   ├── Sidebar.tsx              # Navigation panel with route selection
-│   ├── TopBar.tsx               # Header with cluster status indicators
-│   ├── AnalysisList.tsx         # Container: polls + renders AnalysisCard list
-│   ├── AnalysisCard.tsx         # Individual diagnosis card (verdict, actions)
-│   ├── StatusBadge.tsx          # Severity-colored verdict badge
-│   ├── FilterBar.tsx            # Namespace/pod filtering controls
+│   ├── Sidebar.tsx              # Navigation panel (cluster header + Dashboard)
+│   ├── TopBar.tsx               # Breadcrumbs + live connection indicator
+│   ├── AnalysisCard.tsx         # Individual diagnosis card (verdict, root cause, actions)
 │   ├── EmptyState.tsx           # Zero-results placeholder
-│   ├── ExecuteActionButton.tsx  # 1-click remediation trigger
-│   └── RecommendedActionBlock.tsx  # Action display + execute integration
+│   ├── RecommendedActionBlock.tsx  # Action display + Copy + Execute buttons
+│   ├── ExecuteActionButton.tsx  # 1-click remediation trigger with mutation hook
+│   └── RemediationBanner.tsx    # Success/error banner after execution
 ├── hooks/
-│   └── useAnalyses.ts           # TanStack Query hook (polling + error mapping)
+│   └── useRemediation.ts        # TanStack Mutation hook for POST /api/v1/remediations
 ├── api/
-│   └── client.ts                # HTTP client configuration + base URL
+│   ├── client.ts                # HTTP client + fetchAnalyses + RFC 7807 parsing
+│   ├── hooks.ts                 # useAnalyses — TanStack Query polling hook
+│   └── mappers.ts              # DTO → display model mapping utilities
+├── lib/
+│   └── action-parser.ts         # Parses kubectl commands into typed remediation requests
 ├── types/
-│   └── dashboard.ts             # TypeScript interfaces, DTO contracts, style maps
-├── tests/
-│   ├── navigationExclusivity.property.test.tsx
-│   ├── logEntry.property.test.tsx
-│   ├── severityVisualTreatment.property.test.tsx
-│   └── problemDetailFieldRendering.property.test.tsx
-├── App.tsx                      # Root shell + layout composition
+│   ├── api.ts                   # AiAnalysisResponse, ProblemDetail interfaces
+│   ├── dashboard.ts             # Navigation, style, and component prop types
+│   └── remediation.ts           # RemediationRequest, ParsedAction types
+├── App.tsx                      # Root shell — sidebar + topbar + analysis card list
 └── main.tsx                     # Vite entry point
 ```
 

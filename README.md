@@ -126,7 +126,11 @@ Each breaker operates with independent sliding windows, failure rate thresholds,
 ## Walkthrough — Golden Path Demo
 
 The platform's canonical demo exercises the full pipeline in under 90 seconds:
-chaos injection → event detection → AI diagnosis → 1-click remediation → pod recovery.
+chaos injection → event detection → MCP enrichment → AI diagnosis → 1-click remediation → pod recovery.
+
+### Prerequisites
+
+Ensure the platform is running (`make init` completed successfully) and a local K8s cluster (k3d) is active.
 
 ### Step 1: Injected Chaos — `ImagePullBackOff`
 
@@ -141,14 +145,14 @@ kubectl apply -f deployments/chaos/golden-path-deployment.yaml
 
 ### Step 2: AI Root-Cause Analysis — Observability Dashboard
 
-The pipeline detects the failure, enriches it with live cluster context via MCP (`describe_pod` → `get_events` → `get_logs`), and delivers a structured diagnosis:
+The pipeline detects the failure, the MCP Server enriches it with live cluster context (`describe_pod` → `get_events` → `get_logs`), and Ollama delivers a structured diagnosis with executable remediation commands:
 
 <!-- Screenshot: Observability UI showing AI diagnosis card with CRITICAL_FAILURE verdict -->
 ![AI Diagnosis — Root cause analysis with recommended fix](images/02-ai-diagnosis-dashboard.png)
 
 ### Step 3: Automated Healing — Pod Running
 
-Click **[Apply Recommended Fix]** to execute `fix_container_image` through the MCP Server. The deployment is patched, a new ReplicaSet rolls out, and the pod transitions to `Running`:
+Click **[Execute]** next to the `kubectl set image` action to trigger `fix_container_image` through the MCP Server. The deployment is patched, a new ReplicaSet rolls out, and the pod transitions to `Running`:
 
 <!-- Screenshot: Pod recovered to Running state after remediation -->
 ![Automated Healing — Pod recovered after 1-click fix](images/03-pod-running-after-fix.png)
@@ -169,7 +173,7 @@ Click **[Apply Recommended Fix]** to execute `fix_container_image` through the M
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/<org>/k8s-ai-driven-event-pipeline.git
+git clone https://github.com/antonalag/k8s-ai-driven-event-pipeline.git
 cd k8s-ai-driven-event-pipeline
 
 # Full pre-flight validation + build + launch
@@ -180,8 +184,10 @@ The `make init` target runs a comprehensive pre-flight script that:
 
 1. Creates `.env` from `.env.example` if missing
 2. Validates CLI dependencies (docker, kubectl, docker compose, K8s runtime)
-3. Checks AI provider availability (Ollama reachability + model pull, or BYOK endpoint validation)
-4. Builds and launches all containers via Docker Compose
+3. Detects UFW firewall blocking Docker traffic and adds allow rule automatically
+4. Checks AI provider availability (Ollama reachability + model pull, or BYOK endpoint validation)
+5. Ensures Ollama listens on all interfaces (`0.0.0.0`) for Docker container access
+6. Builds and launches all containers via Docker Compose
 
 ### Available Make Targets
 
@@ -216,7 +222,7 @@ Copy `.env.example` to `.env` and configure your AI provider:
 ```bash
 # For local Ollama (default)
 PLATFORM_AI_PROVIDER=ollama
-OLLAMA_API_URL=http://localhost:11434
+OLLAMA_API_URL=http://localhost:11434   # Used by bootstrap pre-flight only (containers use host.docker.internal)
 OLLAMA_MODEL=llama3.1
 
 # For cloud provider (OpenAI, Anthropic, DeepSeek)
@@ -226,6 +232,8 @@ BYOK_API_KEY=${YOUR_API_KEY}
 BYOK_MODEL=gpt-4o
 BYOK_PROVIDER_TYPE=OPENAI_COMPATIBLE
 ```
+
+> **Note:** `OLLAMA_API_URL` in `.env` is used by `bootstrap.sh` for host-side validation. Inside Docker containers, Ollama is reached via `http://host.docker.internal:11434` (hardcoded in compose).
 
 ---
 

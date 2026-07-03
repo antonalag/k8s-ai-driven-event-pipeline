@@ -79,13 +79,31 @@ Three independent circuit breakers protect different failure domains:
 | `mcpCircuitBreaker` | MCP Server read-path (describe_pod, get_events, get_logs) | Prompt constructed without cluster context (`mcpContextAvailable: false`) |
 | `mutationCircuitBreaker` | MCP Server write-path (remediation tools) | Returns `RemediationResult.Failure` with error code `CIRCUIT_OPEN`, HTTP 503 |
 
+### Circuit Breaker Configuration
+
+Three isolated Resilience4j circuit breakers protect different failure domains:
+
+| Name | Scope | Fallback Behavior |
+|------|-------|-------------------|
+| `aiCircuitBreaker` | LLM inference (Ollama or BYOK HTTP calls) | Returns degraded `AiAnalysis` with verdict `DEGRADED` and "AI provider unavailable" message |
+| `mcpCircuitBreaker` | MCP Server read-path (describe_pod, get_events, get_logs) | Prompt constructed without cluster context (`mcpContextAvailable: false`) |
+| `mutationCircuitBreaker` | MCP Server write-path (remediation tools) | Returns `RemediationResult.Failure` with error code `CIRCUIT_OPEN`, HTTP 503 |
+
 Each breaker operates with:
-- Sliding window (count-based, configurable via environment variables)
-- Failure rate threshold (default 50%)
-- Wait duration in open state (default 30s)
+- Sliding window (count-based, default 20 calls for AI, 10 for MCP/mutation)
+- Failure rate threshold (default 60% for AI, 50% for MCP/mutation)
+- Wait duration in open state (default 10s for AI, 30s for MCP/mutation)
 - Permitted calls in half-open state for probing
 
-Fault isolation is guaranteed — a failing AI provider does not affect MCP read operations, and MCP read failures do not block mutation operations.
+### Startup Resilience
+
+The `OllamaReadinessGate` component prevents a common race condition: Kafka consumers starting before Ollama is reachable from Docker (due to network stabilization after container startup).
+
+Behavior:
+- `spring.kafka.listener.auto-startup=false` — listeners don't start automatically
+- On `ApplicationReadyEvent`, the gate probes Ollama up to 15 times (3s apart, ~45s max)
+- Only after connectivity is confirmed (or max attempts exhausted) are Kafka listeners started
+- This prevents the circuit breaker from opening during the first seconds of startup
 
 ---
 

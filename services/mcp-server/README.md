@@ -114,10 +114,19 @@ Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MCP_MODE` | `mock` | Operation mode: `mock` (synthetic) or `live` (real K8s API) |
+| `MCP_MODE` | `live` | Operation mode: `live` (real K8s API, requires kubeconfig) or `mock` (synthetic responses) |
 | `MCP_PORT` | `3001` | HTTP listen port |
 | `MCP_ALLOWED_NAMESPACES` | `default,chaos-validation` | Comma-separated namespace allowlist for mutations |
 | `MCP_IDEMPOTENCY_TTL_SECONDS` | `300` | Idempotency cache entry TTL |
+
+### Kubernetes Access (Live Mode)
+
+In Docker Compose, the MCP Server mounts `~/.kube/config` read-only. A `docker-entrypoint.sh` script automatically:
+1. Rewrites server URLs (`0.0.0.0`/`127.0.0.1`/`localhost` → `host.docker.internal`)
+2. Removes `certificate-authority-data` (incompatible SAN)
+3. Adds `insecure-skip-tls-verify: true`
+
+This allows seamless connectivity to local k3d/kind/minikube clusters from inside Docker.
 
 ---
 

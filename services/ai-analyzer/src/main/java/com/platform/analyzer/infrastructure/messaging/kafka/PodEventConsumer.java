@@ -15,6 +15,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * Kafka consumer that drives the intelligence pipeline for each KubernetesEvent.
  */
@@ -45,6 +47,14 @@ public class PodEventConsumer {
         log.info("[KAFKA] Event received — pod='{}' namespace='{}' status='{}'",
                 event.podName(), event.namespace(), event.status());
 
+        // Pods transitioning to Running/Succeeded → publish HEALTHY verdict (closes the loop)
+        if (isResolved(event.status())) {
+            log.info("[RESOLVED] Pod '{}' is now {} — publishing HEALTHY verdict.",
+                    event.podName(), event.status());
+            publishHealthyVerdict(event);
+            return;
+        }
+
         if (!requiresAnalysis(event.status())) {
             log.debug("[SKIP] Pod '{}' is {} — no analysis needed.", event.podName(), event.status());
             return;
@@ -71,6 +81,27 @@ public class PodEventConsumer {
             case Failed, Pending, Unknown -> true;
             case Running, Succeeded -> false;
         };
+    }
+
+    private boolean isResolved(PodPhase status) {
+        return status == PodPhase.Running || status == PodPhase.Succeeded;
+    }
+
+    /**
+     * Publishes a HEALTHY verdict directly (no AI invocation) to close the diagnostic loop.
+     * This allows the query endpoint to filter out pods that have recovered.
+     */
+    private void publishHealthyVerdict(KubernetesEvent event) {
+        AiAnalysis healthyAnalysis = new AiAnalysis(
+                event.podName(),
+                event.namespace(),
+                "HEALTHY",
+                "Pod recovered — now in " + event.status() + " state.",
+                List.of()
+        );
+
+        AiAnalysisEvent outboundEvent = AiAnalysisEvent.from(healthyAnalysis, event);
+        messagingPort.publish(outboundEvent);
     }
 
     private String prettyPrint(AiAnalysis analysis) {

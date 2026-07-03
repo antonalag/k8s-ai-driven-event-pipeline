@@ -121,6 +121,22 @@ else
   info "  Recommended: https://k3d.io/"
 fi
 
+# Firewall — ensure Docker containers can reach the host (required for Ollama)
+if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+  if ufw status | grep -q "ALLOW.*172.16.0.0/12\|ALLOW.*docker0"; then
+    pass "UFW allows Docker subnet traffic"
+  else
+    warn "UFW is active but Docker subnet (172.16.0.0/12) is not allowed."
+    info "  Containers cannot reach host services (Ollama). Adding rule..."
+    if sudo ufw allow from 172.16.0.0/12 to any comment "Docker containers → host" >/dev/null 2>&1; then
+      pass "UFW rule added: allow from 172.16.0.0/12"
+    else
+      fail "Could not add UFW rule. Run manually: sudo ufw allow from 172.16.0.0/12 to any"
+      ERRORS=$((ERRORS + 1))
+    fi
+  fi
+fi
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 3. AI Provider Validation
 # ──────────────────────────────────────────────────────────────────────────────
@@ -136,6 +152,50 @@ if [ "$PROVIDER" = "ollama" ]; then
   # Check Ollama is running
   if curl -sf --max-time 3 "$OLLAMA_URL/api/tags" >/dev/null 2>&1; then
     pass "Ollama is reachable at $OLLAMA_URL"
+
+    # Check if Ollama is listening on all interfaces (required for Docker access)
+    OLLAMA_BIND=$(ss -tlnp 2>/dev/null | grep ":11434" | awk '{print $4}' | head -1)
+    if echo "$OLLAMA_BIND" | grep -q "127.0.0.1"; then
+      warn "Ollama is bound to 127.0.0.1 only — Docker containers cannot reach it."
+      info "  Restarting Ollama with OLLAMA_HOST=0.0.0.0..."
+
+      # Determine if Ollama is managed by systemd
+      if systemctl is-active ollama &>/dev/null; then
+        # systemd-managed: create override with Environment directive
+        info "  Ollama is managed by systemd. Applying OLLAMA_HOST override..."
+        sudo mkdir -p /etc/systemd/system/ollama.service.d
+        echo -e "[Service]\nEnvironment=\"OLLAMA_HOST=0.0.0.0\"" | sudo tee /etc/systemd/system/ollama.service.d/override.conf >/dev/null
+        sudo systemctl daemon-reload
+        sudo systemctl restart ollama
+        sleep 3
+      else
+        # Manual process: kill and restart with env var
+        OLLAMA_PID=$(pgrep -f "ollama serve" 2>/dev/null || true)
+        if [ -n "$OLLAMA_PID" ]; then
+          kill "$OLLAMA_PID" 2>/dev/null || true
+          sleep 2
+        fi
+        OLLAMA_HOST=0.0.0.0 nohup ollama serve >/dev/null 2>&1 &
+        sleep 3
+      fi
+
+      # Verify it came back up on 0.0.0.0
+      if curl -sf --max-time 3 "$OLLAMA_URL/api/tags" >/dev/null 2>&1; then
+        NEW_BIND=$(ss -tlnp 2>/dev/null | grep ":11434" | awk '{print $4}' | head -1)
+        if echo "$NEW_BIND" | grep -qE "0\.0\.0\.0|\*"; then
+          pass "Ollama restarted on 0.0.0.0:11434 (Docker-accessible)"
+        else
+          fail "Ollama restarted but still not on 0.0.0.0. Manual fix required:"
+          info "  Run: sudo systemctl edit ollama → add Environment=\"OLLAMA_HOST=0.0.0.0\""
+          ERRORS=$((ERRORS + 1))
+        fi
+      else
+        fail "Ollama failed to restart. Run manually: OLLAMA_HOST=0.0.0.0 ollama serve"
+        ERRORS=$((ERRORS + 1))
+      fi
+    elif echo "$OLLAMA_BIND" | grep -qE "0\.0\.0\.0|\*"; then
+      pass "Ollama is listening on all interfaces (Docker-accessible)"
+    fi
 
     # Check if model is downloaded
     if curl -sf --max-time 5 "$OLLAMA_URL/api/tags" | grep -q "\"$MODEL\""; then

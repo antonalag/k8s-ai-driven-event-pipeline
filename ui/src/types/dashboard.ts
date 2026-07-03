@@ -7,10 +7,7 @@
 
 export type NavItemId =
   | 'dashboard'
-  | 'pods-nodes'
   | 'log-explorer'
-  | 'metrics'
-  | 'distributed-traces'
   | 'ai-insight-engine';
 
 export interface NavItem {
@@ -88,6 +85,6 @@ export const SEVERITY_STYLES: Record<LogSeverity, { tagColor: string; isHighligh
 
 export const STATUS_STYLES: Record<ActiveResource['status'], { dotColor: string; labelColor: string }> = {
   HEALTHY:  { dotColor: 'kd-bg-primary', labelColor: 'kd-text-primary' },
-  CRITICAL: { dotColor: 'kd-bg-error', labelColor: 'kd-text-error' },
+  CRITICAL: { dotColor: 'kd-bg-secondary', labelColor: 'kd-text-secondary' },
   WARNING:  { dotColor: 'kd-bg-tertiary', labelColor: 'kd-text-tertiary' },
 };

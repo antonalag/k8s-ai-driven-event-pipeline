@@ -7,7 +7,7 @@
 export interface AiAnalysisResponse {
   podName: string;
   namespace: string;
-  verdict: 'HEALTHY' | 'TRANSIENT_ISSUE' | 'CRITICAL_FAILURE';
+  verdict: 'HEALTHY' | 'TRANSIENT_ISSUE' | 'CRITICAL_FAILURE' | 'DEGRADED';
   rootCauseAnalysis: string;
   recommendedActions: string[];
   analyzedAt: string;

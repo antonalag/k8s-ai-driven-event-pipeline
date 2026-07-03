@@ -26,7 +26,11 @@ public class AiAnalysisStorageConsumer {
 
     @KafkaListener(
             topics = "ai-analysis-events",
-            groupId = "ai-storage-group"
+            groupId = "ai-storage-group",
+            properties = {
+                    "spring.json.value.default.type=com.platform.analyzer.domain.model.AiAnalysisEvent",
+                    "spring.json.use.type.headers=false"
+            }
     )
     public void onAnalysisEvent(AiAnalysisEvent event) {
         log.info("[STORAGE] Received analysis event for pod='{}' verdict='{}'",

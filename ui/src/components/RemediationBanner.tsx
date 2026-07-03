@@ -15,8 +15,8 @@ type RemediationBannerProps = SuccessBannerProps | ErrorBannerProps;
 
 /**
  * Displays a success or error banner after a remediation action execution.
- * Success: green with check icon, action name and timestamp.
- * Error: red with alert icon, RFC 7807 title + detail + retry button.
+ * Success: Emerald border with check, action name and timestamp.
+ * Error: Rose border with alert, RFC 7807 title + detail + retry button.
  */
 export function RemediationBanner(props: RemediationBannerProps) {
   if (props.variant === 'success') {
@@ -25,12 +25,12 @@ export function RemediationBanner(props: RemediationBannerProps) {
         role="alert"
         aria-label="Remediation success"
         data-testid="remediation-banner-success"
-        className="mt-2 flex items-start gap-2 p-3 rounded-md bg-green-50 border border-green-200 text-green-800 text-sm"
+        className="kd-mt-2 kd-flex kd-items-start kd-gap-2 kd-p-3 kd-rounded kd-border kd-border-primary kd-bg-primary/5 kd-font-sans kd-text-code-sm kd-text-primary"
       >
-        <span className="shrink-0" aria-hidden="true">✓</span>
+        <span className="kd-shrink-0" aria-hidden="true">✓</span>
         <span>
           Remediation applied — <strong>{props.response.action}</strong> completed at{' '}
-          {new Date(props.response.timestamp).toLocaleTimeString()}
+          <span className="kd-font-mono">{new Date(props.response.timestamp).toLocaleTimeString()}</span>
         </span>
       </div>
     );
@@ -41,18 +41,18 @@ export function RemediationBanner(props: RemediationBannerProps) {
       role="alert"
       aria-label="Remediation error"
       data-testid="remediation-banner-error"
-      className="mt-2 flex flex-col gap-2 p-3 rounded-md bg-red-50 border border-red-200 text-red-800 text-sm"
+      className="kd-mt-2 kd-flex kd-flex-col kd-gap-2 kd-p-3 kd-rounded kd-border kd-border-secondary kd-bg-secondary/5 kd-font-sans kd-text-code-sm"
     >
-      <div className="flex items-start gap-2">
-        <span className="shrink-0" aria-hidden="true">✕</span>
+      <div className="kd-flex kd-items-start kd-gap-2">
+        <span className="kd-shrink-0 kd-text-secondary" aria-hidden="true">✕</span>
         <div>
-          <p className="font-semibold" data-testid="error-title">{props.error.title}</p>
-          <p className="text-red-700" data-testid="error-detail">{props.error.detail}</p>
+          <p className="kd-font-bold kd-text-secondary" data-testid="error-title">{props.error.title}</p>
+          <p className="kd-text-on-surface-variant" data-testid="error-detail">{props.error.detail}</p>
         </div>
       </div>
       <button
         onClick={props.onRetry}
-        className="self-start px-3 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 rounded"
+        className="kd-self-start kd-px-3 kd-py-1 kd-font-sans kd-text-code-sm kd-font-medium kd-border kd-border-secondary kd-text-secondary kd-rounded hover:kd-bg-secondary/10 kd-transition-colors kd-duration-200"
         data-testid="retry-button"
       >
         Retry

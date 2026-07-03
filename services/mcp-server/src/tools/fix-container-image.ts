@@ -45,7 +45,7 @@ function getMockResult(params: FixContainerImageParams): WriteToolResult {
 
 /**
  * Patches the container image in a deployment via the Kubernetes API.
- * Uses strategic merge patch to update only the specified container's image.
+ * Uses JSON Patch (RFC 6902) — the default patch format of @kubernetes/client-node.
  */
 async function executeLiveFixImage(params: FixContainerImageParams): Promise<WriteToolResult> {
   try {
@@ -56,7 +56,7 @@ async function executeLiveFixImage(params: FixContainerImageParams): Promise<Wri
     const appsApi = kc.makeApiClient(AppsV1Api);
     const timestamp = new Date().toISOString();
 
-    // Read current deployment to validate container exists
+    // Read current deployment to validate container exists and find its index
     const deployment = await appsApi.readNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,
@@ -64,38 +64,30 @@ async function executeLiveFixImage(params: FixContainerImageParams): Promise<Wri
 
     const containers = deployment.spec?.template?.spec?.containers || [];
     const containerNames = containers.map(c => c.name);
-    const targetContainer = containers.find(c => c.name === params.containerName);
+    const containerIndex = containers.findIndex(c => c.name === params.containerName);
 
-    if (!targetContainer) {
+    if (containerIndex === -1) {
       throw new McpToolError(
         JSON_RPC_ERRORS.INVALID_PARAMS,
         `Container '${params.containerName}' not found in deployment '${params.deploymentName}'. Available containers: ${containerNames.join(', ')}`
       );
     }
 
-    const previousImage = targetContainer.image || 'unknown';
+    const previousImage = containers[containerIndex].image || 'unknown';
 
-    // Strategic merge patch to update container image
-    const patch = {
-      spec: {
-        template: {
-          spec: {
-            containers: [
-              {
-                name: params.containerName,
-                image: params.correctImage,
-              },
-            ],
-          },
-        },
+    // JSON Patch array — @kubernetes/client-node sends application/json-patch+json by default
+    const jsonPatch = [
+      {
+        op: 'replace' as const,
+        path: `/spec/template/spec/containers/${containerIndex}/image`,
+        value: params.correctImage,
       },
-    };
+    ];
 
     await appsApi.patchNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,
-      body: patch,
-      fieldManager: 'mcp-server',
+      body: jsonPatch as unknown as Record<string, unknown>,
     });
 
     return {
@@ -138,10 +130,6 @@ async function executeLiveFixImage(params: FixContainerImageParams): Promise<Wri
 
 /**
  * Handler for the fix_container_image MCP write-back tool.
- *
- * @param args - Raw arguments from JSON-RPC request.
- * @returns JSON-stringified WriteToolResult.
- * @throws McpToolError with appropriate error code on failure.
  */
 export async function handleFixContainerImage(args: Record<string, unknown>): Promise<string> {
   const parseResult = FixContainerImageSchema.safeParse(args);

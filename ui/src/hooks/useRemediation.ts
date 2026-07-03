@@ -1,7 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import type { RemediationRequest, RemediationResponse, RemediationError } from '../types/remediation';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const envBase = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = (envBase && envBase !== 'undefined') ? envBase : '';
 
 /**
  * Executes a remediation request against the backend.

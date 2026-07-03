@@ -8,6 +8,7 @@ export const VERDICT_SEVERITY_MAP: Record<AiAnalysisResponse['verdict'], Correla
   CRITICAL_FAILURE: 'error',
   TRANSIENT_ISSUE: 'warning',
   HEALTHY: 'info',
+  DEGRADED: 'info',
 };
 
 /**
@@ -17,6 +18,7 @@ export const VERDICT_DISPLAY_MAP: Record<AiAnalysisResponse['verdict'], string> 
   CRITICAL_FAILURE: 'Critical Failure',
   TRANSIENT_ISSUE: 'Transient Issue',
   HEALTHY: 'Healthy',
+  DEGRADED: 'Degraded',
 };
 
 /**

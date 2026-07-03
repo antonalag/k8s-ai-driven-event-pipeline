@@ -1,0 +1,25 @@
+# Build artifacts
+ui/dist/
+ui/node_modules/
+services/mcp-server/dist/
+services/mcp-server/node_modules/
+services/ai-analyzer/build/
+services/k8s-collector/build/
+**/bin/
+
+# IDE / tooling
+.git/
+.gradle/
+.kiro/
+.vscode/
+**/.gradle/
+
+# Documentation (not needed in builds)
+docs/
+images/
+*.md
+
+# Environment
+.env
+.env.*
+!.env.example

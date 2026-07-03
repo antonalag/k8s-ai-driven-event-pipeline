@@ -32,8 +32,8 @@ function getMockResult(params: RestartDeploymentParams): WriteToolResult {
 }
 
 /**
- * Executes a rolling restart of a deployment via the Kubernetes API.
- * Patches the deployment's pod template annotation to trigger a rollout.
+ * Executes a rolling restart by patching the restart annotation.
+ * Uses JSON Patch (RFC 6902) — the default patch format of @kubernetes/client-node.
  */
 async function executeLiveRestart(params: RestartDeploymentParams): Promise<WriteToolResult> {
   try {
@@ -44,23 +44,25 @@ async function executeLiveRestart(params: RestartDeploymentParams): Promise<Writ
     const appsApi = kc.makeApiClient(AppsV1Api);
     const restartedAt = new Date().toISOString();
 
-    const patch = {
-      spec: {
-        template: {
-          metadata: {
-            annotations: {
-              'kubectl.kubernetes.io/restartedAt': restartedAt,
-            },
-          },
-        },
-      },
-    };
+    // Ensure annotations path exists by reading current state
+    const deployment = await appsApi.readNamespacedDeployment({
+      name: params.deploymentName,
+      namespace: params.namespace,
+    });
+
+    const hasAnnotations = deployment.spec?.template?.metadata?.annotations !== undefined;
+
+    // Build JSON Patch — use 'add' if annotations don't exist, 'replace' if they do
+    const jsonPatch = hasAnnotations
+      ? [{ op: 'add' as const, path: '/spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt', value: restartedAt }]
+      : [
+          { op: 'add' as const, path: '/spec/template/metadata/annotations', value: { 'kubectl.kubernetes.io/restartedAt': restartedAt } },
+        ];
 
     await appsApi.patchNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,
-      body: patch,
-      fieldManager: 'mcp-server',
+      body: jsonPatch as unknown as Record<string, unknown>,
     });
 
     return {
@@ -75,6 +77,8 @@ async function executeLiveRestart(params: RestartDeploymentParams): Promise<Writ
       },
     };
   } catch (err: unknown) {
+    if (err instanceof McpToolError) throw err;
+
     const error = err as { statusCode?: number; body?: { message?: string }; code?: string; message?: string };
 
     if (error.statusCode === 404 || error.body?.message?.includes('not found')) {
@@ -100,13 +104,8 @@ async function executeLiveRestart(params: RestartDeploymentParams): Promise<Writ
 
 /**
  * Handler for the restart_deployment MCP write-back tool.
- *
- * @param args - Raw arguments from JSON-RPC request.
- * @returns JSON-stringified WriteToolResult.
- * @throws McpToolError with appropriate error code on failure.
  */
 export async function handleRestartDeployment(args: Record<string, unknown>): Promise<string> {
-  // Validate parameters via Zod
   const parseResult = RestartDeploymentSchema.safeParse(args);
   if (!parseResult.success) {
     const issues = parseResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');

@@ -33,15 +33,22 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy entrypoint script (rewrites kubeconfig for Docker networking)
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Create .kube directory for kubeconfig mount
+RUN mkdir -p /home/node/.kube && chown 1000:1000 /home/node/.kube
+
 # Non-root user
 USER 1000:1000
 
 EXPOSE 3001
 
-ENV MCP_MODE=mock \
+ENV MCP_MODE=live \
     MCP_PORT=3001
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=20s \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/health || exit 1
 
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

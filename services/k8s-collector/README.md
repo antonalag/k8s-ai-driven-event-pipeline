@@ -81,6 +81,16 @@ The Informer reads cluster state via the standard kube-config resolution:
 2. `~/.kube/config` (local development)
 3. `KUBECONFIG` environment variable override
 
+### Docker Networking
+
+When running in Docker Compose, the collector uses a `docker-entrypoint.sh` that:
+1. Copies the mounted `~/.kube/config` to `/tmp/.kube/config`
+2. Rewrites server URLs (`0.0.0.0`/`127.0.0.1` → `host.docker.internal`)
+3. Adds `insecure-skip-tls-verify: true` (k3d certs lack `host.docker.internal` SAN)
+4. Exports `KUBECONFIG=/tmp/.kube/config`
+
+This is transparent — `make init` handles everything automatically.
+
 ---
 
 ## Build & Test

@@ -59,17 +59,29 @@ public class OpenSearchAnalysisRepository implements AiAnalysisRepositoryPort {
 
     @Override
     public List<AiAnalysis> findByPodName(String podName) {
-        return springDataRepository.findByPodNameOrderByAnalyzedAtDesc(podName)
-                .stream()
-                .map(AiAnalysisDocument::toDomain)
-                .toList();
+        try {
+            return springDataRepository.findByPodNameOrderByAnalyzedAtDesc(podName)
+                    .stream()
+                    .map(AiAnalysisDocument::toDomain)
+                    .toList();
+        } catch (Exception e) {
+            log.warn("OpenSearch query failed for pod '{}': {}. Returning empty history.",
+                    podName, e.getMessage());
+            return List.of();
+        }
     }
 
     @Override
     public List<AiAnalysis> findByVerdict(String verdict) {
-        return springDataRepository.findByVerdict(verdict)
-                .stream()
-                .map(AiAnalysisDocument::toDomain)
-                .toList();
+        try {
+            return springDataRepository.findByVerdict(verdict)
+                    .stream()
+                    .map(AiAnalysisDocument::toDomain)
+                    .toList();
+        } catch (Exception e) {
+            log.warn("OpenSearch query failed for verdict '{}': {}. Returning empty list.",
+                    verdict, e.getMessage());
+            return List.of();
+        }
     }
 }
