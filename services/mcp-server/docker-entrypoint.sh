@@ -10,19 +10,22 @@ KUBE_SRC="/home/node/.kube/config"
 KUBE_DST="/tmp/.kube/config"
 
 if [ -f "$KUBE_SRC" ]; then
-  mkdir -p /tmp/.kube
-  # Rewrite 0.0.0.0 and 127.0.0.1 to host.docker.internal
-  # Add insecure-skip-tls-verify because k3d certs don't include host.docker.internal as SAN
-  sed -e 's|https://0\.0\.0\.0:|https://host.docker.internal:|g' \
-      -e 's|https://127\.0\.0\.1:|https://host.docker.internal:|g' \
-      -e 's|https://localhost:|https://host.docker.internal:|g' \
-      -e '/certificate-authority-data:/d' \
-      -e '/server:/a\    insecure-skip-tls-verify: true' \
-      "$KUBE_SRC" > "$KUBE_DST"
-  export KUBECONFIG="$KUBE_DST"
-  # Node.js fetch needs this to skip TLS verification for self-signed k3d certs
-  export NODE_TLS_REJECT_UNAUTHORIZED=0
-  echo "mcp-server: kubeconfig rewritten for Docker networking → $KUBE_DST"
+  # Only rewrite kubeconfig in local/dev environments
+  if [ "${ENVIRONMENT:-local}" != "local" ]; then
+    echo "mcp-server: ENVIRONMENT=$ENVIRONMENT — using kubeconfig as-is (no rewrite)"
+    export KUBECONFIG="$KUBE_SRC"
+  else
+    mkdir -p /tmp/.kube
+    sed -e 's|https://0\.0\.0\.0:|https://host.docker.internal:|g' \
+        -e 's|https://127\.0\.0\.1:|https://host.docker.internal:|g' \
+        -e 's|https://localhost:|https://host.docker.internal:|g' \
+        -e '/certificate-authority-data:/d' \
+        -e '/server:/a\    insecure-skip-tls-verify: true' \
+        "$KUBE_SRC" > "$KUBE_DST"
+    export KUBECONFIG="$KUBE_DST"
+    export NODE_TLS_REJECT_UNAUTHORIZED=0
+    echo "mcp-server: kubeconfig rewritten for Docker networking → $KUBE_DST"
+  fi
 else
   if [ "$MCP_MODE" = "live" ]; then
     echo "mcp-server: WARNING — MCP_MODE=live but no kubeconfig found at $KUBE_SRC"

@@ -27,7 +27,6 @@ const FIX_IMAGE_PATTERN =
  * @returns ParsedAction if parseable, null otherwise
  */
 export function parseAction(actionText: string, defaultNamespace?: string): ParsedAction | null {
-  // Try restart pattern first
   const restartMatch = actionText.match(RESTART_PATTERN);
   if (restartMatch) {
     return {
@@ -37,12 +36,11 @@ export function parseAction(actionText: string, defaultNamespace?: string): Pars
     };
   }
 
-  // Try scale pattern
   const scaleMatch = actionText.match(SCALE_PATTERN);
   if (scaleMatch) {
     const replicas = parseInt(scaleMatch[2], 10);
     if (isNaN(replicas) || replicas < 0 || replicas > 10) {
-      return null; // Out of safe range
+      return null;
     }
     return {
       action: 'scale_deployment',
@@ -52,7 +50,6 @@ export function parseAction(actionText: string, defaultNamespace?: string): Pars
     };
   }
 
-  // Try fix image pattern (kubectl set image)
   const fixImageMatch = actionText.match(FIX_IMAGE_PATTERN);
   if (fixImageMatch) {
     const deploymentName = fixImageMatch[1];
@@ -60,18 +57,20 @@ export function parseAction(actionText: string, defaultNamespace?: string): Pars
     const correctImage = fixImageMatch[3];
     const namespace = fixImageMatch[4] || defaultNamespace;
 
+    // Reject if containerName looks like a Docker image reference (LLM hallucination)
+    // e.g., "docker.io/library/nginx" contains slashes → not a valid container name
+    if (containerName.includes('/')) {
+      return null;
+    }
+
     // Handle kubectl's "deployment.container=image" notation
-    // e.g., "golden-path-app.app=nginx:latest" → containerName should be "app"
     if (containerName.includes('.')) {
       containerName = containerName.split('.').pop()!;
     }
 
     // When LLM uses deploymentName as containerName (common hallucination),
-    // fall back to extracting the last segment after the last hyphen-separated
-    // prefix that matches the deployment name pattern.
-    // e.g., deployment="golden-path-app", containerName="golden-path-app" → use "app"
+    // extract the last segment as the container name
     if (containerName === deploymentName) {
-      // Try to extract the last meaningful segment (e.g., "app" from "golden-path-app")
       const segments = containerName.split('-');
       containerName = segments[segments.length - 1];
     }

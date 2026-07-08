@@ -30,10 +30,8 @@ function AIDiagnosisPanel({
       className="kd-col-span-12 ai-panel-depth kd-rounded ai-glow kd-flex kd-flex-col kd-overflow-hidden"
       data-testid="ai-diagnosis-panel"
     >
-      {/* Header */}
       <div className="kd-flex kd-items-center kd-justify-between kd-px-4 kd-py-3 kd-border-b kd-border-ai-violet/20 kd-bg-surface-container-high">
-        <div className="kd-flex kd-items-center kd-gap-3">
-          <div className="kd-w-7 kd-h-7 kd-rounded kd-bg-ai-violet/15 kd-flex kd-items-center kd-justify-center">
+        <div className="kd-flex kd-items-center kd-gap-3">          <div className="kd-w-7 kd-h-7 kd-rounded kd-bg-ai-violet/15 kd-flex kd-items-center kd-justify-center">
             <span
               className="material-symbols-outlined kd-text-ai-violet kd-text-base"
               style={{ fontVariationSettings: "'FILL' 1" }}
@@ -65,13 +63,10 @@ function AIDiagnosisPanel({
         </div>
       </div>
 
-      {/* Content */}
       <div className="kd-flex-1 kd-p-4 kd-grid kd-grid-cols-12 kd-gap-4 kd-overflow-auto">
-        {/* Root Cause / Problem Detail */}
         <div className="kd-col-span-7 kd-space-y-4">
           {/* Problem Detail (RFC 7807) */}
-          <div className="kd-space-y-2">
-            <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
+          <div className="kd-space-y-2">            <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
               <span className="material-symbols-outlined kd-text-sm">error_outline</span>
               Problem Detail (RFC 7807)
             </div>
@@ -104,7 +99,6 @@ function AIDiagnosisPanel({
             </div>
           </div>
 
-          {/* Correlated Events */}
           <div className="kd-space-y-2">
             <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
               <span className="material-symbols-outlined kd-text-sm">hub</span>
@@ -135,14 +129,12 @@ function AIDiagnosisPanel({
           </div>
         </div>
 
-        {/* Remediation Commands */}
         <div className="kd-col-span-5 kd-flex kd-flex-col kd-gap-3">
           <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-flex kd-items-center kd-gap-2">
             <span className="material-symbols-outlined kd-text-sm">magic_button</span>
             Guided Remediation Path
           </div>
 
-          {/* Code block — Zinc-950 bg, code-sm */}
           <pre
             className="kd-flex-1 kd-bg-surface kd-border kd-border-outline-variant kd-p-4 kd-rounded kd-font-mono kd-text-code-sm kd-text-on-surface-variant kd-overflow-auto kd-whitespace-pre-wrap"
             data-testid="remediation-commands"
@@ -150,7 +142,6 @@ function AIDiagnosisPanel({
             {commandsText}
           </pre>
 
-          {/* Copy button — secondary/ghost style */}
           <button
             type="button"
             onClick={handleCopyCommands}

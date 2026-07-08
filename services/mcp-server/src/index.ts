@@ -56,7 +56,6 @@ function requestHandler(req: IncomingMessage, res: ServerResponse): void {
   const url = req.url || '/';
   const method = req.method || 'GET';
 
-  // Health endpoint
   if (url === '/health') {
     if (method === 'GET') {
       handleHealth(req, res);

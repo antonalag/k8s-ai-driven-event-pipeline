@@ -79,16 +79,6 @@ Three independent circuit breakers protect different failure domains:
 | `mcpCircuitBreaker` | MCP Server read-path (describe_pod, get_events, get_logs) | Prompt constructed without cluster context (`mcpContextAvailable: false`) |
 | `mutationCircuitBreaker` | MCP Server write-path (remediation tools) | Returns `RemediationResult.Failure` with error code `CIRCUIT_OPEN`, HTTP 503 |
 
-### Circuit Breaker Configuration
-
-Three isolated Resilience4j circuit breakers protect different failure domains:
-
-| Name | Scope | Fallback Behavior |
-|------|-------|-------------------|
-| `aiCircuitBreaker` | LLM inference (Ollama or BYOK HTTP calls) | Returns degraded `AiAnalysis` with verdict `DEGRADED` and "AI provider unavailable" message |
-| `mcpCircuitBreaker` | MCP Server read-path (describe_pod, get_events, get_logs) | Prompt constructed without cluster context (`mcpContextAvailable: false`) |
-| `mutationCircuitBreaker` | MCP Server write-path (remediation tools) | Returns `RemediationResult.Failure` with error code `CIRCUIT_OPEN`, HTTP 503 |
-
 Each breaker operates with:
 - Sliding window (count-based, default 20 calls for AI, 10 for MCP/mutation)
 - Failure rate threshold (default 60% for AI, 50% for MCP/mutation)
@@ -104,6 +94,8 @@ Behavior:
 - On `ApplicationReadyEvent`, the gate probes Ollama up to 15 times (3s apart, ~45s max)
 - Only after connectivity is confirmed (or max attempts exhausted) are Kafka listeners started
 - This prevents the circuit breaker from opening during the first seconds of startup
+
+For BYOK providers, `ByokReadinessGate` starts listeners immediately without probing (cloud endpoints are assumed always reachable).
 
 ---
 

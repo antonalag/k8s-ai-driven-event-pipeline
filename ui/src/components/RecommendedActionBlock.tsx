@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
 import { ExecuteActionButton } from './ExecuteActionButton';
+import { getDisabledReason } from '../lib/action-parser';
 
 interface RecommendedActionBlockProps {
   actions: string[];
   correlationId?: string;
   namespace?: string;
-  onRemediationSuccess?: () => void;
 }
 
-export function RecommendedActionBlock({ actions, correlationId, namespace, onRemediationSuccess }: RecommendedActionBlockProps) {
+export function RecommendedActionBlock({ actions, correlationId, namespace }: RecommendedActionBlockProps) {
   if (!actions || actions.length === 0) return null;
 
   return (
@@ -20,7 +20,6 @@ export function RecommendedActionBlock({ actions, correlationId, namespace, onRe
           index={index}
           correlationId={correlationId}
           namespace={namespace}
-          onRemediationSuccess={onRemediationSuccess}
         />
       ))}
     </div>
@@ -32,16 +31,16 @@ function ActionItem({
   index,
   correlationId,
   namespace,
-  onRemediationSuccess,
 }: {
   action: string;
   index: number;
   correlationId?: string;
   namespace?: string;
-  onRemediationSuccess?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+
+  const isExecutable = correlationId && namespace && getDisabledReason(action, namespace) === null;
 
   const handleCopy = async () => {
     try {
@@ -49,7 +48,7 @@ function ActionItem({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard API may not be available in all contexts
+      // Clipboard API may not be available
     }
   };
 
@@ -58,12 +57,10 @@ function ActionItem({
 
   return (
     <div className="kd-relative" data-testid={`action-block-${index}`}>
-      {/* Code block */}
       <pre className="kd-bg-surface kd-border kd-border-outline-variant kd-rounded kd-p-3 kd-font-mono kd-text-code-sm kd-text-primary kd-overflow-x-auto kd-whitespace-pre-wrap kd-break-all">
         <code>{action}</code>
       </pre>
 
-      {/* Action buttons row */}
       <div className="kd-flex kd-items-center kd-gap-2 kd-mt-1">
         <button
           onClick={handleCopy}
@@ -74,19 +71,17 @@ function ActionItem({
           {copied ? '✓ Copied' : 'Copy'}
         </button>
 
-        {correlationId && namespace && (
+        {isExecutable && (
           <ExecuteActionButton
             actionText={action}
             correlationId={correlationId}
             namespace={namespace}
             onExecutionStart={handleExecutionStart}
             onExecutionEnd={handleExecutionEnd}
-            onSuccess={onRemediationSuccess}
           />
         )}
       </div>
 
-      {/* Execution overlay */}
       {isExecuting && (
         <div className="kd-absolute kd-inset-0 kd-bg-surface/30 kd-rounded kd-pointer-events-none" />
       )}

@@ -55,7 +55,10 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
             - Do NOT use placeholders like <node_IP> or <configmap-name>. Use actual resource names from the input.
             - Provide 1 to 5 actions maximum, ordered by diagnostic priority.
             - PRIORITIZE mutation commands that fix the root cause:
-              * For ImagePullBackOff: use "kubectl set image deployment/<name> <container>=<correct-image> -n <namespace>"
+              * For ImagePullBackOff: use "kubectl set image deployment/<name> <container-name>=<correct-image> -n <namespace>"
+                IMPORTANT: <container-name> is the NAME of the container (e.g., "app", "main", "nginx"), NOT the old image reference.
+                The container name can be found in the MCP context under containers[].name.
+                Example: kubectl set image deployment/my-app app=nginx:1.27-alpine -n my-namespace
               * For CrashLoopBackOff: use "kubectl rollout restart deployment/<name> -n <namespace>"
               * For scaling issues: use "kubectl scale deployment/<name> --replicas=<N> -n <namespace>"
             - Diagnostic commands (describe, get events, logs) should come AFTER the fix command.

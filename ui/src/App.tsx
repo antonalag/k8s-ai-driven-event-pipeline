@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { JSX } from 'react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -6,8 +6,7 @@ import { AnalysisCard } from './components/AnalysisCard';
 import { useAnalyses } from './api/hooks';
 import { ApiError } from './api/client';
 import EmptyState from './components/EmptyState';
-
-// --- Error Display ---
+import type { AiAnalysisResponse } from './types/api';
 
 function getErrorDisplay(error: Error): { title: string; detail: string } {
   if (error instanceof TypeError) {
@@ -22,31 +21,51 @@ function getErrorDisplay(error: Error): { title: string; detail: string } {
   return { title: 'API Error', detail: 'An unexpected error occurred.' };
 }
 
-// --- App ---
+interface DisplayItem {
+  analysis: AiAnalysisResponse;
+  exiting: boolean;
+}
 
 function App(): JSX.Element {
   const { data, isLoading, isError, error, refetch, isFetching } = useAnalyses();
-  const [dismissedPods, setDismissedPods] = useState<Set<string>>(new Set());
+  const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
+  const prevPodNamesRef = useRef<Set<string>>(new Set());
 
-  // Called after a successful remediation — triggers exit animation then hides the card
-  const handleDismiss = useCallback((podName: string) => {
-    setDismissedPods(prev => new Set(prev).add(podName));
-  }, []);
+  const validAnalyses = data?.filter(a => a.verdict !== 'DEGRADED') ?? [];
 
-  // Filter out DEGRADED and dismissed pods
-  const validAnalyses = data
-    ?.filter(a => a.verdict !== 'DEGRADED')
-    ?.filter(a => !dismissedPods.has(a.podName))
-    ?? [];
+  useEffect(() => {
+    const currentPodNames = new Set(validAnalyses.map(a => a.podName));
+    const prevPodNames = prevPodNamesRef.current;
 
-  // Breadcrumbs
+    const removedPods = [...prevPodNames].filter(p => !currentPodNames.has(p));
+    const currentItems: DisplayItem[] = validAnalyses.map(a => ({ analysis: a, exiting: false }));
+
+    if (removedPods.length > 0) {
+      // Keep removed cards temporarily with exiting flag
+      const exitingItems: DisplayItem[] = removedPods
+        .map(podName => displayItems.find(d => d.analysis.podName === podName))
+        .filter((item): item is DisplayItem => item !== undefined)
+        .map(item => ({ ...item, exiting: true }));
+
+      setDisplayItems([...currentItems, ...exitingItems]);
+
+      // Remove exiting cards after animation
+      setTimeout(() => {
+        setDisplayItems(prev => prev.filter(item => !item.exiting));
+      }, 1500);
+    } else {
+      setDisplayItems(currentItems);
+    }
+
+    prevPodNamesRef.current = currentPodNames;
+  }, [data]);
+
   const breadcrumbs = validAnalyses.length > 0
     ? [
-        { label: 'cluster-01' },
         { label: validAnalyses[0].namespace },
         { label: validAnalyses[0].podName, isActive: true },
       ]
-    : [{ label: 'cluster-01' }, { label: 'default', isActive: true }];
+    : [{ label: 'Waiting for events...', isActive: true }];
 
   function renderContent(): JSX.Element {
     if (isLoading && !data) {
@@ -74,15 +93,19 @@ function App(): JSX.Element {
       );
     }
 
-    if (validAnalyses.length === 0) {
+    if (displayItems.length === 0) {
       return <EmptyState />;
     }
 
     return (
       <div className="kd-space-y-3">
-        {validAnalyses.map((analysis) => (
-          <div key={analysis.podName} className="card-enter">
-            <AnalysisCard analysis={analysis} onDismiss={handleDismiss} />
+        {displayItems.map((item, index) => (
+          <div
+            key={item.analysis.podName}
+            className={item.exiting ? 'card-exit' : 'card-enter'}
+            style={!item.exiting ? { animationDelay: `${index * 100}ms` } : undefined}
+          >
+            <AnalysisCard analysis={item.analysis} />
           </div>
         ))}
       </div>

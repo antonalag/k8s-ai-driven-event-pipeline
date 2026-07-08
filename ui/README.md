@@ -24,11 +24,12 @@ Observability Dashboard — Real-time Kubernetes failure diagnosis and 1-click r
 ## Responsibilities
 
 1. **Real-Time Polling** — TanStack Query fetches `GET /api/v1/analyses` at a 5-second interval, keeping the dashboard synchronized with the backend.
-2. **Analysis Rendering** — Displays AI analysis cards with structured fields: verdict badge (color-coded with LED indicator), root cause analysis, and recommended actions.
-3. **1-Click Remediation** — `ExecuteActionButton` triggers `POST /api/v1/remediations` via TanStack Mutation hooks. Only enabled for parseable kubectl commands (`rollout restart`, `scale`, `set image`). Includes loading spinner, concurrent-action lock, and success/error banner.
+2. **Analysis Rendering** — Displays AI analysis cards with verdict badge (color-coded LED indicator), root cause, and recommended actions. Cards animate in on first appearance.
+3. **1-Click Remediation** — `ExecuteActionButton` triggers `POST /api/v1/remediations` via TanStack Mutation hooks. Only visible for parseable mutation commands (`set image`, `rollout restart`, `scale`). Diagnostic commands show only Copy.
 4. **RFC 7807 Error Handling** — Parses `ProblemDetail` responses from the backend and renders structured error banners.
-5. **DEGRADED Filtering** — Analyses with `verdict=DEGRADED` (circuit breaker fallback) are automatically hidden from the UI.
-6. **Action Parsing** — The `action-parser.ts` module detects which recommended actions are executable mutations and enables the Execute button accordingly.
+5. **Automatic Card Dismissal** — After successful remediation, the card shows a success banner (2s), then fades out with exit animation (1.5s). Backend filtering (`latestPerPod` with HEALTHY exclusion) ensures recovered pods don't reappear on subsequent polls.
+6. **DEGRADED Filtering** — Analyses with `verdict=DEGRADED` (circuit breaker fallback) are hidden from the UI.
+7. **Action Parsing** — `action-parser.ts` detects which recommended actions are executable mutations and controls Execute button visibility.
 
 ---
 

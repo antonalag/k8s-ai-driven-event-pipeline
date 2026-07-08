@@ -1,6 +1,9 @@
 # Kiro
 .kiro/
 
+# Semantic review output (local analysis only)
+semantic-review/
+
 # ──────────────────────────────────────────
 # Secrets — local environment
 # ──────────────────────────────────────────

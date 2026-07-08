@@ -1,24 +1,24 @@
 package com.platform.analyzer.service;
 
+import com.platform.analyzer.domain.model.AiAnalysis;
 import com.platform.analyzer.domain.model.FixImageCommand;
 import com.platform.analyzer.domain.model.RemediationResult;
 import com.platform.analyzer.domain.model.RestartCommand;
 import com.platform.analyzer.domain.model.ScaleCommand;
+import com.platform.analyzer.domain.ports.AiAnalysisRepositoryPort;
 import com.platform.analyzer.domain.ports.RemediationPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Application-layer orchestrator for remediation requests.
  * Coordinates command construction, port dispatch, and structured audit logging.
- *
- * <p>Resilience (circuit breaker) is applied transparently via a decorated
- * {@link RemediationPort} injected by the configuration layer — this service
- * remains free of Resilience4j imports per ArchUnit domain purity rules.
+ * On successful remediation, persists a HEALTHY verdict to close the diagnostic loop.
  */
 @Service
 public class RemediationOrchestrator {
@@ -26,9 +26,12 @@ public class RemediationOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(RemediationOrchestrator.class);
 
     private final RemediationPort remediationPort;
+    private final AiAnalysisRepositoryPort analysisRepository;
 
-    public RemediationOrchestrator(RemediationPort remediationPort) {
+    public RemediationOrchestrator(RemediationPort remediationPort,
+                                   AiAnalysisRepositoryPort analysisRepository) {
         this.remediationPort = remediationPort;
+        this.analysisRepository = analysisRepository;
     }
 
     /**
@@ -60,6 +63,7 @@ public class RemediationOrchestrator {
 
         if (result instanceof RemediationResult.Success) {
             logSuccess(correlationId, action, deploymentName, namespace, durationMs);
+            persistHealthyVerdict(deploymentName, namespace, action);
         } else if (result instanceof RemediationResult.Failure failure) {
             logFailure(correlationId, action, failure.errorCode(), failure.errorMessage(), durationMs);
         }
@@ -118,5 +122,31 @@ public class RemediationOrchestrator {
         log.warn("""
                 {"event":"remediation_failed","correlationId":"{}","action":"{}","errorCode":"{}","errorMessage":"{}","durationMs":{}}""",
                 correlationId, action, errorCode, errorMessage, durationMs);
+    }
+
+    /**
+     * Persists a HEALTHY verdict for the deployment after successful remediation.
+     * Uses the deploymentName as a synthetic podName prefix that the query controller
+     * groups with the original pod analyses via extractDeploymentPrefix.
+     */
+    private void persistHealthyVerdict(String deploymentName, String namespace, String action) {
+        try {
+            // Synthetic podName following K8s naming: deployment-remediated-resolved
+            String syntheticPodName = deploymentName + "-remediated-resolved";
+
+            AiAnalysis healthy = new AiAnalysis(
+                    syntheticPodName,
+                    namespace,
+                    "HEALTHY",
+                    "Remediated via " + action + ". Pod recovered.",
+                    List.of()
+            );
+            analysisRepository.save(healthy);
+
+            log.info("[REMEDIATION] Persisted HEALTHY verdict for deployment '{}'", deploymentName);
+        } catch (Exception e) {
+            log.warn("[REMEDIATION] Failed to persist HEALTHY verdict for deployment '{}': {}",
+                    deploymentName, e.getMessage());
+        }
     }
 }

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/analyses")
 public class AiAnalysisQueryController {
 
-    private static final List<String> EXCLUDED_VERDICTS = List.of("HEALTHY", "DEGRADED");
+    private static final List<String> EXCLUDED_VERDICTS = List.of("HEALTHY", "DEGRADED", "TRANSIENT_ISSUE");
 
     private final AiAnalysisQueryPort queryPort;
 
@@ -51,23 +51,40 @@ public class AiAnalysisQueryController {
     }
 
     /**
-     * Reduces the result set to only the most recent analysis per pod.
-     * Excludes pods whose latest verdict indicates a resolved state (HEALTHY, DEGRADED).
+     * Reduces the result set to only the most recent analysis per deployment.
+     * Groups by deployment name (pod name prefix without ReplicaSet and pod hash suffixes).
+     * Excludes deployments whose latest verdict indicates a resolved state (HEALTHY, DEGRADED).
      */
     private List<AiAnalysisView> latestPerPod(List<AiAnalysisView> analyses) {
-        // Group by podName, keep only the most recent entry per pod
-        Map<String, AiAnalysisView> latestByPod = analyses.stream()
+        Map<String, AiAnalysisView> latestByDeployment = analyses.stream()
                 .collect(Collectors.toMap(
-                        AiAnalysisView::podName,
+                        this::extractDeploymentPrefix,
                         view -> view,
                         (existing, replacement) ->
                                 existing.analyzedAt().isAfter(replacement.analyzedAt()) ? existing : replacement
                 ));
 
-        // Filter out pods whose latest verdict is resolved
-        return latestByPod.values().stream()
+        return latestByDeployment.values().stream()
                 .filter(view -> !EXCLUDED_VERDICTS.contains(view.verdict()))
                 .sorted(Comparator.comparing(AiAnalysisView::analyzedAt).reversed())
                 .toList();
+    }
+
+    /**
+     * Extracts the deployment name from a pod name.
+     * Pod names follow: {deployment}-{replicaSetHash}-{podHash}
+     * e.g., "golden-path-app-5f548d69d9-kjwwg" → "golden-path-app"
+     */
+    private String extractDeploymentPrefix(AiAnalysisView view) {
+        String podName = view.podName();
+        // Remove last two hyphen-separated segments (replicaSet hash + pod hash)
+        int lastDash = podName.lastIndexOf('-');
+        if (lastDash > 0) {
+            int secondLastDash = podName.lastIndexOf('-', lastDash - 1);
+            if (secondLastDash > 0) {
+                return podName.substring(0, secondLastDash);
+            }
+        }
+        return podName;
     }
 }

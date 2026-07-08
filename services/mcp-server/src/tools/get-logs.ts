@@ -159,7 +159,6 @@ async function getK8sLogs(
   kc.loadFromDefault();
   const k8sApi = kc.makeApiClient(CoreV1Api);
 
-  // Get pod to determine container selection
   let pod: Record<string, unknown>;
   try {
     pod = await Promise.race([
@@ -196,7 +195,6 @@ async function getK8sLogs(
 
   const containerName = selectContainer(containersWithState) || specContainers[0]?.name || 'main';
 
-  // Get logs for the selected container
   let rawLogs: string;
   try {
     const logResponse = await Promise.race([

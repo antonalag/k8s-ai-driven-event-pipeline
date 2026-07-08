@@ -79,8 +79,7 @@ public class PodWatcherService {
 
             @Override
             public void onDelete(V1Pod pod, boolean deletedFinalStateUnknown) {
-                log.debug("Pod DELETED — name={}, namespace={}, finalStateUnknown={}",
-                        podName(pod), namespace(pod), deletedFinalStateUnknown);
+                handlePodTermination(pod);
             }
         });
 
@@ -112,6 +111,26 @@ public class PodWatcherService {
 
         } catch (Exception e) {
             log.warn("Could not process Pod event [{}]: {}", eventType, e.getMessage());
+        }
+    }
+
+    /**
+     * Publishes a Succeeded event for deleted pods.
+     * This closes the diagnostic loop — the ai-analyzer will generate a HEALTHY verdict,
+     * causing the card to disappear from the UI.
+     */
+    private void handlePodTermination(V1Pod pod) {
+        try {
+            String name = podName(pod);
+            String ns = namespace(pod);
+
+            KubernetesEvent event = new KubernetesEvent(name, ns, PodPhase.Succeeded, Instant.now());
+
+            log.info("[DELETED] pod={}, namespace={}, publishedAs=Succeeded", name, ns);
+            eventPublisher.publish(event);
+
+        } catch (Exception e) {
+            log.warn("Could not process Pod DELETE event: {}", e.getMessage());
         }
     }
 

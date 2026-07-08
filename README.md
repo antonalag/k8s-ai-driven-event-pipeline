@@ -89,7 +89,7 @@ Key design decisions:
 | **Hexagonal Architecture** | Pure domain layer with no framework annotations. Infrastructure adapters implement domain ports (SPI). |
 | **Contract-First** | Every data boundary has a JSON Schema (`specs/schemas/`). AI output is validated before acceptance. |
 | **Event-Driven Decoupling** | Kafka separates ingestion from analysis from persistence. Each stage can fail independently. |
-| **MCP as Semantic Firewall** | The MCP Server is the sole gateway to cluster state. It exposes curated, parameterized tools — no raw kubectl passthrough. |
+| **MCP as Semantic Firewall** | The MCP Server is the sole gateway to cluster state. It exposes curated, parameterized tools — no raw kubectl passthrough. Runs in live mode with real K8s API access. |
 | **BYOK (Bring Your Own Key)** | Runtime AI provider selection via environment variable. Supports Ollama (local) or any OpenAI-compatible endpoint. |
 | **Supply-Chain Security** | All container images and CI actions are SHA-256 pinned. No mutable tags. |
 
@@ -119,7 +119,7 @@ mcpCircuitBreaker         → protects read-only cluster context retrieval
 mutationCircuitBreaker    → protects write-back remediation operations
 ```
 
-Each breaker operates with independent sliding windows, failure rate thresholds, and wait durations configurable via environment variables (see `.env.example`).
+Each breaker operates with independent sliding windows, failure rate thresholds, and wait durations configurable via environment variables (see `.env.example`). The AI breaker is tuned for container startup resilience (window=20, rate=60%, wait=10s).
 
 ---
 
@@ -134,28 +134,40 @@ Ensure the platform is running (`make init` completed successfully) and a local 
 
 ### Step 1: Injected Chaos — `ImagePullBackOff`
 
-Deploy a pod with an invalid image reference to trigger a deterministic Kubernetes failure:
+Create the namespace and deploy a pod with an invalid image reference:
 
 ```bash
+kubectl apply -f deployments/chaos/namespace.yaml
 kubectl apply -f deployments/chaos/golden-path-deployment.yaml
 ```
 
+Wait ~40 seconds for the full pipeline to process (collector → Kafka → MCP enrichment → Ollama → OpenSearch → UI polling).
+
 <!-- Screenshot: Pod in ImagePullBackOff state -->
-![Chaos Injection — Pod enters ImagePullBackOff](images/01-chaos-imagepullbackoff.png)
+```bash
+NAME                               READY   STATUS             RESTARTS   AGE
+golden-path-app-5f548d69d9-chqmq   0/1     ImagePullBackOff   0          23s
+```
 
 ### Step 2: AI Root-Cause Analysis — Observability Dashboard
 
-The pipeline detects the failure, the MCP Server enriches it with live cluster context (`describe_pod` → `get_events` → `get_logs`), and Ollama delivers a structured diagnosis with executable remediation commands:
+Open http://localhost:3000. The dashboard shows a CRITICAL card with the precise root cause (`ImagePullBackOff — invalid image reference`), and a `kubectl set image` command with an active **Execute** button:
 
 <!-- Screenshot: Observability UI showing AI diagnosis card with CRITICAL_FAILURE verdict -->
-![AI Diagnosis — Root cause analysis with recommended fix](images/02-ai-diagnosis-dashboard.png)
+![AI Diagnosis — Root cause analysis with recommended fix](images/01-ai-diagnosis-dashboard.png)
 
 ### Step 3: Automated Healing — Pod Running
 
-Click **[Execute]** next to the `kubectl set image` action to trigger `fix_container_image` through the MCP Server. The deployment is patched, a new ReplicaSet rolls out, and the pod transitions to `Running`:
+Click **Execute** next to the `kubectl set image` action. The MCP Server patches the deployment, a new ReplicaSet rolls out, and the card fades out as the pod transitions to `Running`:
 
 <!-- Screenshot: Pod recovered to Running state after remediation -->
-![Automated Healing — Pod recovered after 1-click fix](images/03-pod-running-after-fix.png)
+![Automated Healing — Pod recovered after 1-click fix](images/02-pod-running-after-fix.png)
+
+### Cleanup
+
+```bash
+kubectl delete -f deployments/chaos/golden-path-deployment.yaml
+```
 
 ---
 

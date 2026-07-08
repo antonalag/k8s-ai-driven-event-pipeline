@@ -3,8 +3,6 @@
  * for the Observability Dashboard integration layer.
  */
 
-// --- Navigation Types ---
-
 export type NavItemId =
   | 'dashboard'
   | 'log-explorer'
@@ -17,8 +15,6 @@ export interface NavItem {
   isAiItem?: boolean;
 }
 
-// --- Log Types ---
-
 export type LogSeverity = 'INFO' | 'WARN' | 'ERROR' | 'CRIT';
 
 export interface LogEntry {
@@ -28,16 +24,12 @@ export interface LogEntry {
   isStackTrace?: boolean;
 }
 
-// --- Resource Types ---
-
 export interface ActiveResource {
   name: string;
   status: 'HEALTHY' | 'CRITICAL' | 'WARNING';
   cpuPercent: number;
   memoryUsage: string;
 }
-
-// --- AI Diagnosis Types ---
 
 export interface CorrelatedEvent {
   timeAgo: string;
@@ -51,8 +43,6 @@ export interface ProblemDetailDisplay {
   status: string;
   description: string;
 }
-
-// --- Component Props ---
 
 export interface SidebarProps {
   activeNavItem: NavItemId;
@@ -73,8 +63,6 @@ export interface AIDiagnosisPanelProps {
   remediationCommands: string[];
   confidence: number;
 }
-
-// --- Style Constant Mappings ---
 
 export const SEVERITY_STYLES: Record<LogSeverity, { tagColor: string; isHighlighted: boolean }> = {
   INFO:  { tagColor: 'kd-text-primary-fixed-dim', isHighlighted: false },

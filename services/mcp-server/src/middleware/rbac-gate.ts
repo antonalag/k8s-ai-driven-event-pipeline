@@ -65,7 +65,6 @@ export function authorizeWriteOperation(toolName: string, namespace: string): vo
     );
   }
 
-  // Validate tool is in the write whitelist
   if (!(WRITE_TOOL_WHITELIST as readonly string[]).includes(toolName)) {
     const decision: RbacDecision = {
       timestamp: new Date().toISOString(),
@@ -81,7 +80,6 @@ export function authorizeWriteOperation(toolName: string, namespace: string): vo
     );
   }
 
-  // Validate namespace is in the allowlist
   if (!allowedNamespaces.has(namespace)) {
     const decision: RbacDecision = {
       timestamp: new Date().toISOString(),
@@ -97,7 +95,6 @@ export function authorizeWriteOperation(toolName: string, namespace: string): vo
     );
   }
 
-  // Authorized
   const decision: RbacDecision = {
     timestamp: new Date().toISOString(),
     tool: toolName,

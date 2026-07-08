@@ -73,7 +73,6 @@ export function setCache(key: string, result: string): void {
     cache.delete(key);
   }
 
-  // Evict oldest entry if at capacity
   if (cache.size >= MAX_ENTRIES) {
     const oldestKey = cache.keys().next().value;
     if (oldestKey !== undefined) {

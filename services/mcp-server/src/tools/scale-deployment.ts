@@ -53,7 +53,6 @@ async function executeLiveScale(params: ScaleDeploymentParams): Promise<WriteToo
     });
     const previousReplicas = current.spec?.replicas ?? 1;
 
-    // JSON Patch array
     const jsonPatch = [
       {
         op: 'replace' as const,

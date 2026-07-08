@@ -19,7 +19,6 @@ function LogViewer({ entries }: LogViewerProps): JSX.Element {
       className="kd-col-span-12 panel-depth kd-rounded kd-flex kd-flex-col kd-overflow-hidden"
       data-testid="log-viewer-panel"
     >
-      {/* Panel Header */}
       <div className="kd-flex kd-items-center kd-justify-between kd-px-4 kd-py-2 kd-border-b kd-border-outline-variant kd-bg-surface-container-high">
         <div className="kd-flex kd-items-center kd-gap-2">
           <span className="material-symbols-outlined kd-text-primary kd-text-base">
@@ -45,7 +44,6 @@ function LogViewer({ entries }: LogViewerProps): JSX.Element {
         </div>
       </div>
 
-      {/* Log Content — Zinc-950 background, code-sm font */}
       <div
         className="kd-flex-1 kd-overflow-auto kd-p-4 kd-font-mono kd-text-code-sm kd-bg-surface"
         data-testid="log-content"
@@ -65,24 +63,20 @@ interface LogLineProps {
 function LogLine({ entry }: LogLineProps): JSX.Element {
   const styles = SEVERITY_STYLES[entry.severity];
 
-  // Highlighted lines (ERROR/CRIT): left border + tinted background
   const lineClasses = styles.isHighlighted
     ? 'kd-flex kd-gap-4 kd-py-1 kd-px-3 kd-border-l-2 kd-border-secondary kd-bg-secondary/5 kd-mt-px'
     : 'kd-flex kd-gap-4 kd-py-1 kd-mt-px';
 
   return (
     <div className={lineClasses} data-testid="log-line">
-      {/* Timestamp */}
       <span className="kd-text-on-surface-variant kd-shrink-0 kd-opacity-60">
         {entry.timestamp}
       </span>
-      {/* Severity tag — syntax highlighted with status color */}
       {!entry.isStackTrace && (
         <span className={`${styles.tagColor} kd-shrink-0 kd-font-bold`} data-testid="severity-tag">
           [{entry.severity}]
         </span>
       )}
-      {/* Message */}
       <span
         className={
           styles.isHighlighted

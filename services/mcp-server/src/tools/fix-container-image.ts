@@ -56,7 +56,6 @@ async function executeLiveFixImage(params: FixContainerImageParams): Promise<Wri
     const appsApi = kc.makeApiClient(AppsV1Api);
     const timestamp = new Date().toISOString();
 
-    // Read current deployment to validate container exists and find its index
     const deployment = await appsApi.readNamespacedDeployment({
       name: params.deploymentName,
       namespace: params.namespace,

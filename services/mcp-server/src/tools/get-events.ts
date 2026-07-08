@@ -208,7 +208,6 @@ export async function handleGetEvents(args: Record<string, unknown>): Promise<st
 
     const err = error as Error & { code?: string; statusCode?: number };
 
-    // Timeout
     if (
       err.message === 'K8S_TIMEOUT' ||
       err.name === 'AbortError' ||
@@ -220,7 +219,6 @@ export async function handleGetEvents(args: Record<string, unknown>): Promise<st
       );
     }
 
-    // K8s API unreachable
     if (
       err.code === 'ECONNREFUSED' ||
       err.code === 'ENOTFOUND' ||
@@ -232,7 +230,6 @@ export async function handleGetEvents(args: Record<string, unknown>): Promise<st
       );
     }
 
-    // Generic upstream failure
     throw new McpToolError(
       MCP_ERRORS.UPSTREAM_FAILURE,
       `Upstream failure: unable to query events — ${err.message || 'unknown error'}`

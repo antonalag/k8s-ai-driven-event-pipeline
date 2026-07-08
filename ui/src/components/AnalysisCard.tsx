@@ -1,11 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
 import type { JSX } from 'react';
 import type { AiAnalysisResponse } from '../types/api';
 import { RecommendedActionBlock } from './RecommendedActionBlock';
 
 interface AnalysisCardProps {
   analysis: AiAnalysisResponse;
-  onDismiss: (podName: string) => void;
 }
 
 function generateCorrelationId(): string {
@@ -51,25 +49,11 @@ function formatTime(isoTimestamp: string): string {
   }
 }
 
-export function AnalysisCard({ analysis, onDismiss }: AnalysisCardProps): JSX.Element {
+export function AnalysisCard({ analysis }: AnalysisCardProps): JSX.Element {
   const style = getVerdictStyle(analysis.verdict);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [isExiting, setIsExiting] = useState(false);
-
-  const handleRemediationSuccess = useCallback(() => {
-    // Trigger exit animation, then dismiss from parent
-    setIsExiting(true);
-    setTimeout(() => {
-      onDismiss(analysis.podName);
-    }, 3500); // Show success banner for 3.5s, then dismiss
-  }, [analysis.podName, onDismiss]);
 
   return (
-    <div
-      ref={cardRef}
-      className={`kd-border ${style.border} kd-rounded kd-bg-surface-container-low kd-overflow-hidden ${isExiting ? 'card-exit' : ''}`}
-    >
-      {/* Header */}
+    <div className={`kd-border ${style.border} kd-rounded kd-bg-surface-container-low kd-overflow-hidden`}>
       <div className="kd-flex kd-items-center kd-justify-between kd-px-4 kd-py-3 kd-border-b kd-border-outline-variant kd-bg-surface-container-high">
         <div className="kd-flex kd-items-center kd-gap-3">
           <span className="kd-font-mono kd-text-code-sm kd-text-on-surface kd-font-bold">
@@ -90,9 +74,7 @@ export function AnalysisCard({ analysis, onDismiss }: AnalysisCardProps): JSX.El
         </div>
       </div>
 
-      {/* Body */}
       <div className="kd-px-4 kd-py-3 kd-space-y-3">
-        {/* Root Cause */}
         <div>
           <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-mb-1">
             Root Cause
@@ -102,7 +84,6 @@ export function AnalysisCard({ analysis, onDismiss }: AnalysisCardProps): JSX.El
           </p>
         </div>
 
-        {/* Recommended Actions */}
         {analysis.recommendedActions && analysis.recommendedActions.length > 0 && (
           <div>
             <div className="kd-font-sans kd-text-label-caps kd-text-on-surface-variant kd-uppercase kd-tracking-widest kd-mb-2">
@@ -112,7 +93,6 @@ export function AnalysisCard({ analysis, onDismiss }: AnalysisCardProps): JSX.El
               actions={analysis.recommendedActions}
               correlationId={generateCorrelationId()}
               namespace={analysis.namespace}
-              onRemediationSuccess={handleRemediationSuccess}
             />
           </div>
         )}

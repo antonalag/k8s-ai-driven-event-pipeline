@@ -38,8 +38,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final URI REMEDIATION_TYPE =
             URI.create("urn:problem-type:remediation-upstream-failure");
 
-    // ─── Bean Validation (400) ────────────────────────────────────────────────
-
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
@@ -68,8 +66,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
-    // ─── Circuit Breaker OPEN (503) ───────────────────────────────────────────
-
     @ExceptionHandler(CallNotPermittedException.class)
     public ProblemDetail handleCircuitBreakerOpen(CallNotPermittedException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
@@ -81,8 +77,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem;
     }
 
-    // ─── Domain: AiAnalysisException (502) ────────────────────────────────────
-
     @ExceptionHandler(AiAnalysisException.class)
     public ProblemDetail handleAiAnalysisException(AiAnalysisException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
@@ -92,8 +86,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setType(AI_ANALYSIS_TYPE);
         return problem;
     }
-
-    // ─── Domain: RemediationException (502) ───────────────────────────────────
 
     @ExceptionHandler(RemediationException.class)
     public ProblemDetail handleRemediationException(RemediationException ex) {

@@ -15,7 +15,8 @@ import org.springframework.web.client.RestClient;
  * Prevents the circuit breaker from opening during container startup when the
  * host network may not be fully routable yet (Docker → host via UFW).
  *
- * Only active when platform.ai.provider=ollama. For BYOK, consumers start immediately.
+ * Runs the probe on a dedicated thread to avoid blocking other ApplicationReadyEvent listeners.
+ * Only active when platform.ai.provider=ollama.
  */
 @Component
 @ConditionalOnProperty(name = "platform.ai.provider", havingValue = "ollama", matchIfMissing = true)
@@ -36,7 +37,11 @@ public class OllamaReadinessGate {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void waitForProviderAndStartListeners() {
+    public void onApplicationReady() {
+        Thread.ofVirtual().name("ollama-readiness-probe").start(this::probeAndStartListeners);
+    }
+
+    private void probeAndStartListeners() {
         log.info("[READINESS] Probing Ollama at {} before starting Kafka consumers...", ollamaUrl);
 
         boolean reachable = false;
