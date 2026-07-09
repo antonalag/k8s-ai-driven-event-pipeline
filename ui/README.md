@@ -27,9 +27,9 @@ Observability Dashboard — Real-time Kubernetes failure diagnosis and 1-click r
 2. **Analysis Rendering** — Displays AI analysis cards with verdict badge (color-coded LED indicator), root cause, and recommended actions. Cards animate in on first appearance.
 3. **1-Click Remediation** — `ExecuteActionButton` triggers `POST /api/v1/remediations` via TanStack Mutation hooks. Only visible for parseable mutation commands (`set image`, `rollout restart`, `scale`). Diagnostic commands show only Copy.
 4. **RFC 7807 Error Handling** — Parses `ProblemDetail` responses from the backend and renders structured error banners.
-5. **Automatic Card Dismissal** — After successful remediation, the card shows a success banner (2s), then fades out with exit animation (1.5s). Backend filtering (`latestPerPod` with HEALTHY exclusion) ensures recovered pods don't reappear on subsequent polls.
-6. **DEGRADED Filtering** — Analyses with `verdict=DEGRADED` (circuit breaker fallback) are hidden from the UI.
-7. **Action Parsing** — `action-parser.ts` detects which recommended actions are executable mutations and controls Execute button visibility.
+5. **Automatic Card Dismissal** — After successful remediation, the backend persists a HEALTHY verdict. The query controller groups analyses by deployment prefix, and the card disappears on the next poll cycle (5s) when HEALTHY becomes the latest verdict.
+6. **Verdict Filtering** — Only `CRITICAL_FAILURE` analyses are shown. `DEGRADED` (circuit breaker fallback), `TRANSIENT_ISSUE` (brief startup states), and `HEALTHY` (resolved) are excluded at the API level.
+7. **Action Parsing** — `action-parser.ts` detects which recommended actions are executable mutations and controls Execute button visibility. Only `kubectl set image`, `kubectl rollout restart`, and `kubectl scale` patterns render the Execute button.
 
 ---
 

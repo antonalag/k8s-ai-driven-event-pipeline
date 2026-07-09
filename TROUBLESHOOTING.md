@@ -249,7 +249,7 @@ docker exec ai-analyzer wget -qO- --timeout=5 "http://host.docker.internal:11434
 
 **Cause:** Race condition — Kafka consumers start consuming events before Ollama is reachable from Docker. Initial failures open the circuit breaker, and subsequent events hit the fast-fail path indefinitely.
 
-**Fix (already applied):** `OllamaReadinessGate` probes the AI provider up to 10 times (3s apart) before starting Kafka listeners. Combined with `spring.kafka.listener.auto-startup=false`, consumers only begin processing after connectivity is confirmed.
+**Fix (already applied):** `OllamaReadinessGate` probes the AI provider up to 15 times (3s apart, ~45s max) on a virtual thread before starting Kafka listeners. Combined with `spring.kafka.listener.auto-startup=false`, consumers only begin processing after connectivity is confirmed. A per-deployment 60-second cooldown prevents redundant analyses during pod transitions.
 
 If you still encounter this after a restart:
 ```bash

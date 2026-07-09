@@ -23,7 +23,7 @@ Key design decisions:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                              KUBERNETES CLUSTER                                           │
+│                              KUBERNETES CLUSTER                                          │
 │  ┌─────────────────────────┐                                                             │
 │  │  Pods / Deployments     │─── Watch (Informers) ───┐                                   │
 │  │  (chaos-validation ns)  │                         │                                   │
@@ -37,14 +37,14 @@ Key design decisions:
                                                        │ KubernetesEvent
                                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                         APACHE KAFKA (KRaft mode, single broker)                          │
+│                         APACHE KAFKA (KRaft mode, single broker)                         │
 │                                                                                          │
 │   Topic: k8s-pod-events (3 partitions)       Topic: ai-analysis-events                   │
 └───────────────────────┬──────────────────────────────────────────────────────────────────┘
                         │ Consumer Group: ai-analyzer-group
                         ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                           ai-analyzer (Spring Boot 3.5 / Java 21)                         │
+│                           ai-analyzer (Spring Boot 3.5 / Java 21)                        │
 │                                                                                          │
 │  ┌─────────────────┐    ┌─────────────────────────┐    ┌──────────────────────────────┐  │
 │  │  Domain Layer   │    │  Application Service    │    │  Infrastructure Layer        │  │
@@ -53,29 +53,29 @@ Key design decisions:
 │  │  RemediationCmd │    │  RemediationOrchestrator│    │  ByokLanguageModelAdapter    │  │
 │  │  Ports (SPI)    │    │                         │    │  McpClientAdapter            │  │
 │  └─────────────────┘    └─────────────────────────┘    │  RemediationAdapter          │  │
-│                                                        │  OpenSearchQueryAdapter       │  │
+│                                                        │  OpenSearchQueryAdapter      │  │
 │                                                        └───────────────┬──────────────┘  │
-└────────────────────────────────────────────────────────────────────────┼──────────────────┘
+└────────────────────────────────────────────────────────────────────────┼─────────────────┘
                         │                                                │
           ┌─────────────┼────────────────────────────────────────────────┘
           │             │                          │
           ▼             ▼                          ▼
 ┌───────────────┐  ┌──────────────────┐   ┌────────────────────────────────────────────┐
-│  OpenSearch   │  │  AI Provider     │   │  MCP Server (Node.js / TypeScript)          │
-│               │  │                  │   │  JSON-RPC 2.0 over HTTP                     │
-│  Index:       │  │  Ollama (local)  │   │                                             │
-│  ai-analysis- │  │  — or —          │   │  Read Tools:                                │
-│  reports      │  │  BYOK (cloud)    │   │    describe_pod, get_events, get_logs       │
-│               │  │  OpenAI/Anthropic│   │  Write Tools (Zod-validated, idempotent):   │
-└───────────────┘  └──────────────────┘   │    restart_deployment, scale_deployment,    │
-                                          │    fix_container_image                      │
+│  OpenSearch   │  │  AI Provider     │   │  MCP Server (Node.js / TypeScript)         │
+│               │  │                  │   │  JSON-RPC 2.0 over HTTP                    │
+│  Index:       │  │  Ollama (local)  │   │                                            │
+│  ai-analysis- │  │  — or —          │   │  Read Tools:                               │
+│  reports      │  │  BYOK (cloud)    │   │    describe_pod, get_events, get_logs      │
+│               │  │  OpenAI/Anthropic│   │  Write Tools (Zod-validated, idempotent):  │
+└───────────────┘  └──────────────────┘   │    restart_deployment, scale_deployment,   │
+                                          │    fix_container_image                     │
                                           └────────────────────────────────────────────┘
           ▲
           │ GET /api/v1/analyses
           │ POST /api/v1/remediations
           │
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                     Observability UI (React 18 / TypeScript / Tailwind CSS)                │
+│                     Observability UI (React 18 / TypeScript / Tailwind CSS)              │
 │                                                                                          │
 │  TanStack Query polling (5s) — RFC 7807 error parsing — 1-click remediation buttons      │
 │  Served via Nginx reverse-proxy (zero-CORS in container mode)                            │
@@ -257,19 +257,23 @@ k8s-ai-driven-event-pipeline/
 │   ├── k8s-collector/        # Kubernetes Informer → Kafka producer (Spring Boot)
 │   ├── ai-analyzer/          # Consumer + AI reasoning + REST API (Spring Boot)
 │   └── mcp-server/           # MCP tool server (Node.js/TypeScript, JSON-RPC 2.0)
-├── ui/                       # Observability Dashboard (React + TypeScript + Tailwind)
+├── ui/                       # Observability Dashboard (React + TypeScript + Vite)
 ├── deployments/
-│   ├── docker-compose.yaml   # Global orchestration (all services)
-│   ├── docker-compose/       # Kafka infrastructure (KRaft)
-│   └── chaos/                # Failure injection manifests
+│   ├── docker-compose.yaml   # Global orchestration (all services + OpenSearch)
+│   ├── docker-compose/       # Kafka infrastructure (KRaft mode)
+│   └── chaos/                # Failure injection manifests (ImagePull, CrashLoop, OOM)
 ├── specs/schemas/            # JSON Schema contracts (k8s-event, ai-analysis)
 ├── scripts/
-│   └── bootstrap.sh          # Pre-flight validation & platform launcher
+│   ├── bootstrap.sh          # Pre-flight validation & platform launcher
+│   ├── remediation-smoke-test.sh  # Remediation API contract validation
+│   └── mcp-smoke-test.sh     # MCP Server JSON-RPC verification
 ├── docs/
 │   ├── system.spec.md        # System constitution & roadmap
 │   ├── golden-path.md        # Demo scenario technical script
 │   └── chaos-checks.md       # Resilience certification report
+├── images/                   # Golden path walkthrough screenshots
 ├── .github/workflows/ci.yml  # CI pipeline (SHA-pinned, Trivy scan)
+├── .dockerignore             # Build context exclusions
 ├── Makefile                  # Developer task runner
 ├── TROUBLESHOOTING.md        # Common errors & fixes guide
 └── .env.example              # Configuration template

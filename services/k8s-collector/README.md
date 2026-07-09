@@ -19,9 +19,10 @@ Kubernetes cluster monitor that watches Pod state changes via the native Informe
 ## Responsibilities
 
 1. **Pod State Watching** — Registers a Kubernetes Informer against the cluster API server to receive real-time callbacks on Pod lifecycle changes (ADDED, MODIFIED, DELETED).
-2. **Event Filtering** — Selectively processes Pods in failure states (`Failed`, `Pending`, `Unknown`) and ignores healthy transitions to minimize noise.
-3. **Event Mapping** — Transforms raw `V1Pod` objects into structured `KubernetesEvent` records conforming to the contract at `specs/schemas/k8s-event.v1.json`.
-4. **Kafka Publishing** — Asynchronously publishes `KubernetesEvent` records to the `k8s-pod-events` topic using `KafkaTemplate` with pod name as the partition key (guarantees ordered delivery per pod).
+2. **Event Publishing** — Publishes ALL pod state changes to Kafka. The downstream `ai-analyzer` decides which events require analysis.
+3. **Lifecycle Closure** — On pod DELETE, publishes a `Succeeded` event to signal the diagnostic loop closure (allows the UI to remove resolved cards).
+4. **Event Mapping** — Transforms raw `V1Pod` objects into structured `KubernetesEvent` records conforming to the contract at `specs/schemas/k8s-event.v1.json`.
+5. **Kafka Publishing** — Asynchronously publishes `KubernetesEvent` records to the `k8s-pod-events` topic using `KafkaTemplate` with pod name as the partition key (guarantees ordered delivery per pod).
 
 ---
 
@@ -125,10 +126,6 @@ Published events conform to `specs/schemas/k8s-event.v1.json`:
   "podName": "my-app-7b4c6f8d9-x2k5m",
   "namespace": "default",
   "status": "Failed",
-  "reason": "CrashLoopBackOff",
-  "message": "Back-off restarting failed container",
-  "timestamp": "2025-06-22T10:30:00Z",
-  "nodeName": "k3d-cluster-agent-0",
-  "containerStatuses": [...]
+  "timestamp": "2025-06-22T10:30:00Z"
 }
 ```

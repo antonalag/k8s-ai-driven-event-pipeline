@@ -97,6 +97,10 @@ Behavior:
 
 For BYOK providers, `ByokReadinessGate` starts listeners immediately without probing (cloud endpoints are assumed always reachable).
 
+### Event Deduplication
+
+The `PodEventConsumer` applies a 60-second cooldown per deployment to prevent redundant Ollama invocations during pod state transitions. When a deployment is analyzed, subsequent events for pods in the same deployment are skipped until the cooldown expires. The cooldown resets when a pod transitions to Running/Succeeded, allowing fresh analysis if the deployment fails again.
+
 ---
 
 ## AI Provider Routing
