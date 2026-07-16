@@ -34,7 +34,7 @@ public class AnalysisLifecycleConsumer {
     )
     public void onLifecycleEvent(AnalysisLifecycleEvent event) {
         if (!"LIFECYCLE_CHANGE".equals(event.eventType())) {
-            return; // Skip non-lifecycle events
+            return;
         }
 
         log.info("[LIFECYCLE-STORAGE] Received lifecycle event for analysis='{}' status='{}'",

@@ -70,6 +70,7 @@ export function DismissButton({ analysisId }: DismissButtonProps): JSX.Element {
           onKeyDown={handleKeyDown}
           placeholder="Reason (optional)"
           autoFocus
+          aria-label="Dismissal reason"
           className="kd-px-2 kd-py-1 kd-font-sans kd-text-code-sm kd-border kd-border-outline-variant kd-rounded kd-bg-surface kd-text-on-surface kd-w-48 focus:kd-border-primary focus:kd-outline-none kd-transition-colors"
           data-testid="dismiss-reason-field"
         />

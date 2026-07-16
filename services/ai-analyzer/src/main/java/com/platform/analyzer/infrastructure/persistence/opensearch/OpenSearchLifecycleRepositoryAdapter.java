@@ -15,10 +15,7 @@ import java.util.Optional;
 /**
  * Adapter implementing AnalysisLifecycleRepositoryPort using OpenSearch.
  * Activated when platform.storage.type=opensearch.
- *
- * <p>Handles mapping between the {@link AiAnalysisDocument} persistence model
- * and the {@link AnalysisLifecycle} domain entity. Legacy documents with null
- * status are treated as PENDING.</p>
+ * Legacy documents with null status are treated as PENDING.
  */
 @Component
 @ConditionalOnProperty(name = "platform.storage.type", havingValue = "opensearch")

@@ -3,8 +3,6 @@ package com.platform.analyzer.domain.ports;
 /**
  * Domain exception thrown when a dismiss operation is attempted
  * on an analysis that is already in a terminal state (DISMISSED or REMEDIATED).
- *
- * <p>Zero Spring imports — pure domain.</p>
  */
 public class AnalysisAlreadyResolvedException extends RuntimeException {
 

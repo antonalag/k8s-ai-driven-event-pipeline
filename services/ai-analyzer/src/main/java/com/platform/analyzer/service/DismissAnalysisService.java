@@ -18,9 +18,6 @@ import java.time.LocalDateTime;
  * Application-layer service implementing the dismiss analysis use case.
  * Coordinates lifecycle state transition, persistence, event publication,
  * and structured audit logging.
- *
- * <p>Follows the same structural pattern as {@link RemediationOrchestrator}:
- * constructor injection, SLF4J logging, and domain-port delegation.</p>
  */
 @Service
 public class DismissAnalysisService implements DismissAnalysisUseCase {

@@ -5,8 +5,6 @@ import java.time.Instant;
 /**
  * Domain event record published when an analysis lifecycle state changes.
  * Sent to the {@code ai-analysis-events} Kafka topic for downstream consumers.
- *
- * <p>Zero Spring imports — pure domain.</p>
  */
 public record AnalysisLifecycleEvent(
         String analysisId,
@@ -19,10 +17,6 @@ public record AnalysisLifecycleEvent(
         String eventType
 ) {
 
-    /**
-     * Static factory for constructing a dismissal lifecycle event
-     * from the current state of an {@link AnalysisLifecycle} entity.
-     */
     public static AnalysisLifecycleEvent dismissed(AnalysisLifecycle lifecycle) {
         return new AnalysisLifecycleEvent(
                 lifecycle.getId(),

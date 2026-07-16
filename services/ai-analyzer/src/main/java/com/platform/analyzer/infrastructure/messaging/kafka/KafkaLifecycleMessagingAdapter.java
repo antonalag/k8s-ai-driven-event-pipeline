@@ -15,8 +15,6 @@ import java.util.concurrent.CompletableFuture;
  * Adapter implementing LifecycleMessagingPort using Apache Kafka.
  * Publishes analysis lifecycle state-change events to the {@code ai-analysis-events} topic.
  * Activated when platform.messaging.type=kafka.
- *
- * <p>Uses async fire-and-forget with error logging (non-blocking).</p>
  */
 @Component
 @ConditionalOnProperty(name = "platform.messaging.type", havingValue = "kafka")

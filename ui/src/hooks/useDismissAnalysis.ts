@@ -47,11 +47,6 @@ async function dismissAnalysis({ analysisId, reason }: DismissRequest): Promise<
   return response.json();
 }
 
-/**
- * TanStack Mutation hook for dismissing an analysis.
- * On success, invalidates the analyses query to trigger refetch
- * (the backend no longer returns DISMISSED analyses).
- */
 export function useDismissAnalysis() {
   const queryClient = useQueryClient();
 

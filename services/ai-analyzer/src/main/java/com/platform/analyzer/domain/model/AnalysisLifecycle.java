@@ -22,9 +22,6 @@ public class AnalysisLifecycle {
         this.resolutionReason = null;
     }
 
-    /**
-     * Full-args constructor for rehydration from persistence.
-     */
     public AnalysisLifecycle(String id, AiAnalysis analysis,
                              AnalysisStatus status,
                              LocalDateTime resolvedAt,
@@ -37,8 +34,7 @@ public class AnalysisLifecycle {
     }
 
     /**
-     * Transitions this analysis to DISMISSED state.
-     * Only allowed from PENDING status.
+     * Transitions to DISMISSED state. Only allowed from PENDING.
      */
     public void dismiss(String reason, LocalDateTime timestamp) {
         if (this.status != AnalysisStatus.PENDING) {

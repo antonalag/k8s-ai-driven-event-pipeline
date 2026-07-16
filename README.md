@@ -15,6 +15,7 @@ Key design decisions:
 
 - **No free-text AI.** Every LLM response is validated against a strict JSON Schema contract. Unstructured output is rejected at the infrastructure boundary.
 - **No direct cluster mutation without human approval.** Write-back tools are exposed through the UI as explicit actions, never triggered autonomously.
+- **Operator-controlled lifecycle.** Every analysis card can be dismissed with an audit trail, or remediated with a single click. Both paths produce structured events for downstream processing.
 - **Fail-fast over retry.** Three independent circuit breakers ensure a failing subsystem (AI provider, MCP server, or mutation path) degrades gracefully without contaminating healthy paths.
 
 ---
@@ -73,11 +74,12 @@ Key design decisions:
           ▲
           │ GET /api/v1/analyses
           │ POST /api/v1/remediations
+          │ POST /api/v1/analyses/{id}/dismiss
           │
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
 │                     Observability UI (React 18 / TypeScript / Tailwind CSS)              │
 │                                                                                          │
-│  TanStack Query polling (5s) — RFC 7807 error parsing — 1-click remediation buttons      │
+│  TanStack Query polling (5s) — RFC 7807 error parsing — 1-click remediation — dismiss     │
 │  Served via Nginx reverse-proxy (zero-CORS in container mode)                            │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -92,6 +94,7 @@ Key design decisions:
 | **MCP as Semantic Firewall** | The MCP Server is the sole gateway to cluster state. It exposes curated, parameterized tools — no raw kubectl passthrough. Runs in live mode with real K8s API access. |
 | **BYOK (Bring Your Own Key)** | Runtime AI provider selection via environment variable. Supports Ollama (local) or any OpenAI-compatible endpoint. |
 | **Supply-Chain Security** | All container images and CI actions are SHA-256 pinned. No mutable tags. |
+| **Lifecycle Management** | Analysis reports follow a state machine (PENDING → DISMISSED / REMEDIATED). Dismissed analyses are excluded from active views. |
 
 ---
 

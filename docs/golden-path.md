@@ -128,6 +128,7 @@ It exercises the full pipeline end-to-end: chaos injection → event detection �
 | 5 | Execute button renders | Parseable action → enabled button |
 | 6 | Post-remediation pod status | `Running` within 30 seconds |
 | 7 | UI updates automatically | Next poll cycle shows HEALTHY or no longer critical |
+| 8 | Dismiss flow works | Card removed from dashboard after dismiss, not returned by GET /api/v1/analyses |
 
 ---
 
@@ -151,6 +152,53 @@ kubectl get pods -n chaos-validation
 
 # Clean up
 kubectl delete -f deployments/chaos/golden-path-deployment.yaml
+```
+
+---
+
+## 5.1. Alternative Flow — Dismiss Without Remediation
+
+Not all diagnoses require action. False positives, self-healing pods, or already-known issues can be dismissed directly from the dashboard.
+
+### Dismiss Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  User clicks [Dismiss] or [✕] on the analysis card                          │
+│  Optional: enters a reason (e.g., "False positive — pod self-healed")        │
+│                                                                              │
+│  UI sends POST /api/v1/analyses/{id}/dismiss                                 │
+│    { "reason": "False positive — pod self-healed" }                          │
+│                                                                              │
+│  Backend:                                                                    │
+│    DismissAnalysisService → transitions PENDING → DISMISSED                  │
+│    Publishes AnalysisLifecycleEvent to Kafka (ai-analysis-events)            │
+│    Consumer updates OpenSearch document status                               │
+│                                                                              │
+│  Result: Card exits dashboard on next poll cycle (5s)                        │
+│  GET /api/v1/analyses no longer returns dismissed analyses                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### When to Dismiss
+
+| Scenario | Action |
+|----------|--------|
+| Pod self-healed before operator reviewed | Dismiss with reason |
+| Known maintenance window causing expected failures | Quick dismiss (✕) |
+| AI diagnosis is a false positive | Dismiss with "False positive" reason |
+| Issue requires remediation action | Use [Apply Recommended Fix] instead |
+
+### Demo Command (API)
+
+```bash
+# Dismiss via curl (optional reason)
+curl -X POST http://localhost:8082/api/v1/analyses/{id}/dismiss \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "False positive — pod self-healed"}'
+
+# Quick dismiss (no reason)
+curl -X POST http://localhost:8082/api/v1/analyses/{id}/dismiss
 ```
 
 ---
