@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import type { AiAnalysisResponse } from '../types/api';
 import { RecommendedActionBlock } from './RecommendedActionBlock';
+import { DismissButton } from './DismissButton';
 
 interface AnalysisCardProps {
   analysis: AiAnalysisResponse;
@@ -8,6 +9,15 @@ interface AnalysisCardProps {
 
 function generateCorrelationId(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * Derives the OpenSearch document ID from the analysis data.
+ * Matches the backend pattern: `${podName}-${analyzedAt.toEpochMilli()}`
+ */
+function deriveAnalysisId(analysis: AiAnalysisResponse): string {
+  const epochMillis = new Date(analysis.analyzedAt).getTime();
+  return `${analysis.podName}-${epochMillis}`;
 }
 
 const VERDICT_STYLES: Record<string, { border: string; badge: string; label: string }> = {
@@ -51,6 +61,7 @@ function formatTime(isoTimestamp: string): string {
 
 export function AnalysisCard({ analysis }: AnalysisCardProps): JSX.Element {
   const style = getVerdictStyle(analysis.verdict);
+  const analysisId = deriveAnalysisId(analysis);
 
   return (
     <div className={`kd-border ${style.border} kd-rounded kd-bg-surface-container-low kd-overflow-hidden`}>
@@ -71,6 +82,7 @@ export function AnalysisCard({ analysis }: AnalysisCardProps): JSX.Element {
             <span className="kd-w-1.5 kd-h-1.5 kd-rounded-full kd-bg-current" />
             {style.label}
           </span>
+          <DismissButton analysisId={analysisId} />
         </div>
       </div>
 
