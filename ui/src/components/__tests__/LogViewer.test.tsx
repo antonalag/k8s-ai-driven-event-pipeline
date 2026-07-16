@@ -31,18 +31,21 @@ describe('LogViewer component', () => {
     });
   });
 
-  describe('Requirement 5.4 - flicker animation class on container', () => {
-    it('applies kd-animate-flicker class to the log content container', () => {
+  describe('Requirement 5.4 - log content container styling', () => {
+    it('applies correct classes to the log content container', () => {
       const { container } = render(<LogViewer entries={sampleEntries} />);
 
       const logContent = container.querySelector('[data-testid="log-content"]');
       expect(logContent).not.toBeNull();
-      expect(logContent!.className).toContain('kd-animate-flicker');
+      expect(logContent!.className).toContain('kd-flex-1');
+      expect(logContent!.className).toContain('kd-overflow-auto');
+      expect(logContent!.className).toContain('kd-font-mono');
+      expect(logContent!.className).toContain('kd-bg-surface');
     });
   });
 
   describe('Requirement 5.3 - ERROR/CRIT lines have highlight border and tinted background', () => {
-    it('ERROR lines have border-l-4, border-error, and bg-error/5 classes', () => {
+    it('ERROR lines have border-l-2, border-secondary, and bg-secondary/5 classes', () => {
       const errorEntry: LogEntry[] = [
         { timestamp: '14:02:15.982', severity: 'ERROR', message: 'Connection error' },
       ];
@@ -51,12 +54,12 @@ describe('LogViewer component', () => {
       const logLine = container.querySelector('[data-testid="log-line"]');
       expect(logLine).not.toBeNull();
       const classes = logLine!.className;
-      expect(classes).toContain('kd-border-l-4');
-      expect(classes).toContain('kd-border-error');
-      expect(classes).toContain('kd-bg-error/5');
+      expect(classes).toContain('kd-border-l-2');
+      expect(classes).toContain('kd-border-secondary');
+      expect(classes).toContain('kd-bg-secondary/5');
     });
 
-    it('CRIT lines have border-l-4, border-error, and bg-error/5 classes', () => {
+    it('CRIT lines have border-l-2, border-secondary, and bg-secondary/5 classes', () => {
       const critEntry: LogEntry[] = [
         { timestamp: '14:02:26.241', severity: 'CRIT', message: 'Container unhealthy' },
       ];
@@ -65,12 +68,12 @@ describe('LogViewer component', () => {
       const logLine = container.querySelector('[data-testid="log-line"]');
       expect(logLine).not.toBeNull();
       const classes = logLine!.className;
-      expect(classes).toContain('kd-border-l-4');
-      expect(classes).toContain('kd-border-error');
-      expect(classes).toContain('kd-bg-error/5');
+      expect(classes).toContain('kd-border-l-2');
+      expect(classes).toContain('kd-border-secondary');
+      expect(classes).toContain('kd-bg-secondary/5');
     });
 
-    it('INFO lines do NOT have error highlight classes', () => {
+    it('INFO lines do NOT have highlight classes', () => {
       const infoEntry: LogEntry[] = [
         { timestamp: '14:02:11.231', severity: 'INFO', message: 'All good' },
       ];
@@ -79,9 +82,9 @@ describe('LogViewer component', () => {
       const logLine = container.querySelector('[data-testid="log-line"]');
       expect(logLine).not.toBeNull();
       const classes = logLine!.className;
-      expect(classes).not.toContain('kd-border-l-4');
-      expect(classes).not.toContain('kd-border-error');
-      expect(classes).not.toContain('kd-bg-error/5');
+      expect(classes).not.toContain('kd-border-l-2');
+      expect(classes).not.toContain('kd-border-secondary');
+      expect(classes).not.toContain('kd-bg-secondary/5');
     });
   });
 

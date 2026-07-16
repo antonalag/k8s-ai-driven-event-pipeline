@@ -20,7 +20,7 @@ describe('ExecuteActionButton', () => {
   };
 
   describe('disabled state', () => {
-    it('disables button for unparseable action text', () => {
+    it('renders enabled button even for unparseable action text (validates on click)', () => {
       const Wrapper = createQueryWrapper();
       const { container } = render(
         <Wrapper>
@@ -33,11 +33,11 @@ describe('ExecuteActionButton', () => {
 
       const button = container.querySelector('[data-testid="execute-action-button"]') as HTMLButtonElement;
       expect(button).not.toBeNull();
-      expect(button.disabled).toBe(true);
-      expect(button.getAttribute('title')).toBe('Cannot auto-parse this action');
+      expect(button.disabled).toBe(false);
+      expect(button.textContent).toBe('Execute');
     });
 
-    it('disables button for scale with replicas > 10', () => {
+    it('renders enabled button for scale with replicas > 10 (validates on click)', () => {
       const Wrapper = createQueryWrapper();
       const { container } = render(
         <Wrapper>
@@ -50,7 +50,7 @@ describe('ExecuteActionButton', () => {
 
       const button = container.querySelector('[data-testid="execute-action-button"]') as HTMLButtonElement;
       expect(button).not.toBeNull();
-      expect(button.disabled).toBe(true);
+      expect(button.disabled).toBe(false);
     });
   });
 
@@ -122,7 +122,7 @@ describe('ExecuteActionButton', () => {
   });
 
   describe('accessibility', () => {
-    it('sets aria-label for disabled button', () => {
+    it('sets aria-label for all buttons', () => {
       const Wrapper = createQueryWrapper();
       const { container } = render(
         <Wrapper>
@@ -135,7 +135,7 @@ describe('ExecuteActionButton', () => {
 
       const button = container.querySelector('[data-testid="execute-action-button"]') as HTMLButtonElement;
       expect(button).not.toBeNull();
-      expect(button.getAttribute('aria-label')).toBe('Cannot auto-parse this action');
+      expect(button.getAttribute('aria-label')).toBe('Execute action');
     });
 
     it('sets aria-label for enabled button', () => {

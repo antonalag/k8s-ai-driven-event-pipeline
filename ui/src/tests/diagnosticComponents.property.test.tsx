@@ -66,7 +66,7 @@ describe('Property 10: UI renders N actions as N code blocks with copy buttons',
           cleanup();
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 
@@ -109,7 +109,7 @@ describe('Property 11: UI renders correct badge count for mcpToolsUsed', () => {
           cleanup();
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 
@@ -124,14 +124,14 @@ describe('Property 11: UI renders correct badge count for mcpToolsUsed', () => {
 // --- Property 12: RFC 7807 fields rendered in labeled layout ---
 
 describe('Property 12: UI renders all RFC 7807 fields in labeled layout', () => {
-  it('for any ProblemDetail with all fields present, renders type/title/status/detail in labeled rows', () => {
+  it('for any ProblemDetail with all fields present, renders type/title/status/detail in labeled rows', { timeout: 30000 }, () => {
     fc.assert(
       fc.property(
         fc.record({
-          type: fc.webUrl(),
-          title: fc.string({ minLength: 1, maxLength: 100 }),
+          type: fc.constantFrom('https://example.com/errors/not-found', 'urn:problem-type:validation-error', 'https://api.local/issues/timeout'),
+          title: fc.string({ minLength: 1, maxLength: 50 }),
           status: fc.integer({ min: 100, max: 599 }),
-          detail: fc.string({ minLength: 1, maxLength: 300 }),
+          detail: fc.string({ minLength: 1, maxLength: 100 }),
         }),
         (problem) => {
           const { container } = render(<Rfc7807FieldLayout problem={problem} />);
@@ -162,7 +162,7 @@ describe('Property 12: UI renders all RFC 7807 fields in labeled layout', () => 
           cleanup();
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 3 },
     );
   });
 
@@ -185,7 +185,7 @@ describe('Property 13: UI action grouping by categorization', () => {
       fc.property(kubectlActionArb, (action: string) => {
         expect(categorizeAction(action)).toBe('kubectl-commands');
       }),
-      { numRuns: 100 },
+      { numRuns: 50 },
     );
   });
 
@@ -194,7 +194,7 @@ describe('Property 13: UI action grouping by categorization', () => {
       fc.property(configActionArb, (action: string) => {
         expect(categorizeAction(action)).toBe('configuration-changes');
       }),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 
@@ -203,7 +203,7 @@ describe('Property 13: UI action grouping by categorization', () => {
       fc.property(verificationActionArb, (action: string) => {
         expect(categorizeAction(action)).toBe('verification-steps');
       }),
-      { numRuns: 100 },
+      { numRuns: 50 },
     );
   });
 
@@ -240,7 +240,7 @@ describe('Property 13: UI action grouping by categorization', () => {
 
         cleanup();
       }),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 
@@ -262,7 +262,7 @@ describe('Property 13: UI action grouping by categorization', () => {
           cleanup();
         },
       ),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 });

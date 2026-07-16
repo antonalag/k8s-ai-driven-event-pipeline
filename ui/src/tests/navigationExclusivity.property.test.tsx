@@ -13,17 +13,13 @@ import Sidebar from '../components/Sidebar';
  * For any NavItemId, when clicked, exactly one item has active state matching that ID.
  */
 
-const navItemIdArb = fc.constantFrom(
-  'dashboard', 'pods-nodes', 'log-explorer',
-  'metrics', 'distributed-traces', 'ai-insight-engine' as const
+const navItemIdArb = fc.constantFrom<NavItemId>(
+  'dashboard', 'log-explorer', 'ai-insight-engine'
 );
 
 const NAV_LABELS: Record<NavItemId, string> = {
   'dashboard': 'Dashboard',
-  'pods-nodes': 'Pods & Nodes',
   'log-explorer': 'Log Explorer',
-  'metrics': 'Metrics',
-  'distributed-traces': 'Distributed Traces',
   'ai-insight-engine': 'AI Insight Engine',
 };
 

@@ -51,6 +51,15 @@ public class AiAnalysisDocument {
     @Field(type = FieldType.Date)
     private Instant sourceEventTimestamp;
 
+    @Field(type = FieldType.Keyword)
+    private String status;
+
+    @Field(type = FieldType.Date)
+    private Instant resolvedAt;
+
+    @Field(type = FieldType.Text)
+    private String resolutionReason;
+
     public AiAnalysisDocument() {}
 
     public static AiAnalysisDocument from(AiAnalysis analysis) {
@@ -66,6 +75,7 @@ public class AiAnalysisDocument {
         doc.mcpToolsUsed = analysis.mcpToolsUsed() != null ? analysis.mcpToolsUsed() : List.of();
         doc.mcpContextAvailable = analysis.mcpContextAvailable();
         doc.labels = new HashMap<>();
+        doc.status = "PENDING";
         return doc;
     }
 
@@ -90,4 +100,10 @@ public class AiAnalysisDocument {
     public void setLabels(Map<String, String> labels) { this.labels = labels; }
     public Instant getAnalyzedAt() { return analyzedAt; }
     public Instant getSourceEventTimestamp() { return sourceEventTimestamp; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public Instant getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
+    public String getResolutionReason() { return resolutionReason; }
+    public void setResolutionReason(String resolutionReason) { this.resolutionReason = resolutionReason; }
 }

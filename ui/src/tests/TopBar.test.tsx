@@ -75,15 +75,12 @@ describe('TopBar component', () => {
       expect(container.textContent).toContain('LIVE CONNECTION');
     });
 
-    it('renders with pulsing animation class', () => {
+    it('renders with pulsing animation class on the dot element', () => {
       const { container } = render(<TopBar breadcrumbs={defaultBreadcrumbs} />);
 
-      // The live connection container should have pulse-soft animation
-      const liveIndicator = Array.from(container.querySelectorAll('div')).find(
-        (el) => el.textContent?.includes('LIVE CONNECTION') && el.className.includes('kd-animate-pulse-soft')
-      );
-
-      expect(liveIndicator).toBeDefined();
+      // The pulsing dot has the animate-pulse-soft class
+      const dot = container.querySelector('.kd-animate-pulse-soft');
+      expect(dot).not.toBeNull();
     });
 
     it('renders a green pulsing dot', () => {
@@ -95,49 +92,14 @@ describe('TopBar component', () => {
     });
   });
 
-  describe('Utility icons (Requirement 4.5)', () => {
-    it('renders terminal icon', () => {
+  describe('Header structure (Requirement 4.5)', () => {
+    it('renders as a header element with sticky positioning', () => {
       const { container } = render(<TopBar breadcrumbs={defaultBreadcrumbs} />);
 
-      const icons = container.querySelectorAll('.material-symbols-outlined');
-      const terminalIcon = Array.from(icons).find(
-        (el) => el.textContent?.trim() === 'terminal'
-      );
-
-      expect(terminalIcon).toBeDefined();
-    });
-
-    it('renders notifications icon', () => {
-      const { container } = render(<TopBar breadcrumbs={defaultBreadcrumbs} />);
-
-      const icons = container.querySelectorAll('.material-symbols-outlined');
-      const notificationsIcon = Array.from(icons).find(
-        (el) => el.textContent?.trim() === 'notifications'
-      );
-
-      expect(notificationsIcon).toBeDefined();
-    });
-
-    it('renders settings icon', () => {
-      const { container } = render(<TopBar breadcrumbs={defaultBreadcrumbs} />);
-
-      const icons = container.querySelectorAll('.material-symbols-outlined');
-      const settingsIcon = Array.from(icons).find(
-        (el) => el.textContent?.trim() === 'settings'
-      );
-
-      expect(settingsIcon).toBeDefined();
-    });
-
-    it('renders profile avatar (person icon)', () => {
-      const { container } = render(<TopBar breadcrumbs={defaultBreadcrumbs} />);
-
-      const icons = container.querySelectorAll('.material-symbols-outlined');
-      const personIcon = Array.from(icons).find(
-        (el) => el.textContent?.trim() === 'person'
-      );
-
-      expect(personIcon).toBeDefined();
+      const header = container.querySelector('header');
+      expect(header).not.toBeNull();
+      expect(header!.className).toContain('kd-sticky');
+      expect(header!.className).toContain('kd-top-0');
     });
   });
 

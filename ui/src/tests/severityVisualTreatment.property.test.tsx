@@ -59,13 +59,13 @@ describe('Property 3: Severity-driven visual treatment', () => {
 
         if (expectedStyles.isHighlighted) {
           // ERROR and CRIT lines must have highlight classes
-          expect(lineClasses).toContain('kd-border-error');
-          expect(lineClasses).toContain('kd-bg-error/5');
-          expect(lineClasses).toContain('kd-border-l-4');
+          expect(lineClasses).toContain('kd-border-secondary');
+          expect(lineClasses).toContain('kd-bg-secondary/5');
+          expect(lineClasses).toContain('kd-border-l-2');
         } else {
           // INFO and WARN lines must NOT have highlight classes
-          expect(lineClasses).not.toContain('kd-border-error');
-          expect(lineClasses).not.toContain('kd-bg-error/5');
+          expect(lineClasses).not.toContain('kd-border-secondary');
+          expect(lineClasses).not.toContain('kd-bg-secondary/5');
         }
       }),
       { numRuns: 100 },

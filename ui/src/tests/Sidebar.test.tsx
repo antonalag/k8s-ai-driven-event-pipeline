@@ -21,22 +21,15 @@ function SidebarWithState({ initialActive = 'dashboard' as NavItemId }) {
 
 describe('Sidebar component', () => {
   describe('Requirement 3.3 - Navigation items with icons', () => {
-    it('renders all 6 nav items with correct labels', () => {
+    it('renders all 3 nav items with correct labels', () => {
       const { container } = render(
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      const expectedLabels = [
-        'Dashboard',
-        'Pods & Nodes',
-        'Log Explorer',
-        'Metrics',
-        'Distributed Traces',
-        'AI Insight Engine',
-      ];
+      const expectedLabels = ['Dashboard', 'Log Explorer', 'AI Insight Engine'];
 
       const navButtons = container.querySelectorAll('nav button');
-      expect(navButtons.length).toBe(6);
+      expect(navButtons.length).toBe(3);
 
       expectedLabels.forEach((label) => {
         const found = Array.from(navButtons).some((btn) =>
@@ -51,17 +44,10 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      const expectedIcons = [
-        'dashboard',
-        'view_module',
-        'description',
-        'analytics',
-        'timeline',
-        'auto_awesome',
-      ];
+      const expectedIcons = ['dashboard', 'description', 'auto_awesome'];
 
       const iconElements = container.querySelectorAll('nav button .material-symbols-outlined');
-      expect(iconElements.length).toBe(6);
+      expect(iconElements.length).toBe(3);
 
       expectedIcons.forEach((icon, index) => {
         expect(iconElements[index].textContent).toBe(icon);
@@ -72,12 +58,12 @@ describe('Sidebar component', () => {
   describe('Requirement 3.4 - Active nav item styling', () => {
     it('active nav item has nav-item-active class', () => {
       const { container } = render(
-        <Sidebar activeNavItem="metrics" onNavItemClick={() => {}} />
+        <Sidebar activeNavItem="ai-insight-engine" onNavItemClick={() => {}} />
       );
 
       const activeItems = container.querySelectorAll('.nav-item-active');
       expect(activeItems.length).toBe(1);
-      expect(activeItems[0].textContent).toContain('Metrics');
+      expect(activeItems[0].textContent).toContain('AI Insight Engine');
     });
 
     it('click changes active item', () => {
@@ -103,7 +89,7 @@ describe('Sidebar component', () => {
     });
 
     it('only clicked item becomes active, previous is deactivated', () => {
-      const { container } = render(<SidebarWithState initialActive="pods-nodes" />);
+      const { container } = render(<SidebarWithState initialActive="log-explorer" />);
 
       // Click AI Insight Engine
       const navButtons = container.querySelectorAll('nav button');
@@ -116,11 +102,11 @@ describe('Sidebar component', () => {
       expect(activeItems.length).toBe(1);
       expect(activeItems[0].textContent).toContain('AI Insight Engine');
 
-      // Pods & Nodes should no longer be active
-      const podsBtn = Array.from(navButtons).find((btn) =>
-        btn.textContent?.includes('Pods & Nodes')
+      // Log Explorer should no longer be active
+      const logBtn = Array.from(navButtons).find((btn) =>
+        btn.textContent?.includes('Log Explorer')
       );
-      expect(podsBtn?.classList.contains('nav-item-active')).toBe(false);
+      expect(logBtn?.classList.contains('nav-item-active')).toBe(false);
     });
   });
 
@@ -130,10 +116,8 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      // Check the "Active Resources" label is rendered
       expect(container.textContent).toContain('Active Resources');
 
-      // Check health dots are rendered (kd-rounded-full with color classes)
       const healthDots = container.querySelectorAll('[class*="kd-rounded-full"][class*="kd-bg-"]');
       expect(healthDots.length).toBeGreaterThanOrEqual(2);
     });
@@ -143,13 +127,11 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      // Check analyzer-api resource
       expect(container.textContent).toContain('analyzer-api');
       expect(container.textContent).toContain('HEALTHY');
       expect(container.textContent).toContain('CPU: 12%');
       expect(container.textContent).toContain('Mem: 256Mi');
 
-      // Check db-worker-7c2d resource
       expect(container.textContent).toContain('db-worker-7c2d');
       expect(container.textContent).toContain('CRITICAL');
       expect(container.textContent).toContain('CPU: 0.1%');
@@ -185,7 +167,7 @@ describe('Sidebar component', () => {
       const buttonsWithGroup = Array.from(navButtons).filter((btn) =>
         btn.className.includes('kd-group')
       );
-      expect(buttonsWithGroup.length).toBe(6);
+      expect(buttonsWithGroup.length).toBe(3);
     });
 
     it('nav item icons have group-hover:kd-scale-110 class', () => {
@@ -197,7 +179,7 @@ describe('Sidebar component', () => {
       const iconsWithScaleHover = Array.from(icons).filter((icon) =>
         icon.className.includes('group-hover:kd-scale-110')
       );
-      expect(iconsWithScaleHover.length).toBe(6);
+      expect(iconsWithScaleHover.length).toBe(3);
     });
 
     it('non-AI nav item labels have group-hover:kd-translate-x-1 class', () => {
@@ -205,9 +187,9 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      // Non-AI items (first 5) should have translate-x-1 on hover
+      // Non-AI items (first 2) should have translate-x-1 on hover
       const navButtons = container.querySelectorAll('nav button');
-      const nonAiButtons = Array.from(navButtons).slice(0, 5);
+      const nonAiButtons = Array.from(navButtons).slice(0, 2);
       nonAiButtons.forEach((btn) => {
         const label = btn.querySelector('span:not(.material-symbols-outlined)');
         expect(
@@ -224,8 +206,7 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      // The healthy resource card (analyzer-api) should have hover:kd-border-primary/40
-      const cards = container.querySelectorAll('nav [class*="kd-p-3"]');
+      const cards = container.querySelectorAll('[class*="kd-p-3"]');
       const healthyCard = Array.from(cards).find((card) =>
         card.textContent?.includes('analyzer-api')
       );
@@ -238,7 +219,7 @@ describe('Sidebar component', () => {
         <Sidebar activeNavItem="dashboard" onNavItemClick={() => {}} />
       );
 
-      const cards = container.querySelectorAll('nav [class*="kd-p-3"]');
+      const cards = container.querySelectorAll('[class*="kd-p-3"]');
       const healthyCard = Array.from(cards).find((card) =>
         card.textContent?.includes('analyzer-api')
       );

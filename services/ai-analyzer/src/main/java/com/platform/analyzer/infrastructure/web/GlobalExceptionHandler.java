@@ -1,6 +1,8 @@
 package com.platform.analyzer.infrastructure.web;
 
 import com.platform.analyzer.domain.ports.AiAnalysisException;
+import com.platform.analyzer.domain.ports.AnalysisAlreadyResolvedException;
+import com.platform.analyzer.domain.ports.AnalysisNotFoundException;
 import com.platform.analyzer.domain.ports.RemediationException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +39,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             URI.create("urn:problem-type:ai-analysis-failure");
     private static final URI REMEDIATION_TYPE =
             URI.create("urn:problem-type:remediation-upstream-failure");
+    private static final URI ANALYSIS_NOT_FOUND_TYPE =
+            URI.create("urn:problem-type:analysis-not-found");
+    private static final URI ANALYSIS_ALREADY_RESOLVED_TYPE =
+            URI.create("urn:problem-type:analysis-already-resolved");
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -94,6 +100,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Remediation upstream failure: the MCP Server could not execute the mutation.");
         problem.setTitle("Remediation Upstream Failure");
         problem.setType(REMEDIATION_TYPE);
+        return problem;
+    }
+
+    @ExceptionHandler(AnalysisNotFoundException.class)
+    public ProblemDetail handleAnalysisNotFound(AnalysisNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Analysis Not Found");
+        problem.setType(ANALYSIS_NOT_FOUND_TYPE);
+        problem.setProperty("analysisId", ex.getAnalysisId());
+        return problem;
+    }
+
+    @ExceptionHandler(AnalysisAlreadyResolvedException.class)
+    public ProblemDetail handleAlreadyResolved(AnalysisAlreadyResolvedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Analysis Already Resolved");
+        problem.setType(ANALYSIS_ALREADY_RESOLVED_TYPE);
+        problem.setProperty("analysisId", ex.getAnalysisId());
+        problem.setProperty("currentStatus", ex.getCurrentStatus());
         return problem;
     }
 }

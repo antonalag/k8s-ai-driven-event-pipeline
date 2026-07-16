@@ -7,6 +7,7 @@ import { useAnalyses } from './api/hooks';
 import { ApiError } from './api/client';
 import EmptyState from './components/EmptyState';
 import type { AiAnalysisResponse } from './types/api';
+import type { NavItemId } from './types/dashboard';
 
 function getErrorDisplay(error: Error): { title: string; detail: string } {
   if (error instanceof TypeError) {
@@ -29,6 +30,7 @@ interface DisplayItem {
 function App(): JSX.Element {
   const { data, isLoading, isError, error, refetch, isFetching } = useAnalyses();
   const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
+  const [activeNavItem, setActiveNavItem] = useState<NavItemId>('dashboard');
   const prevPodNamesRef = useRef<Set<string>>(new Set());
 
   const validAnalyses = data?.filter(a => a.verdict !== 'DEGRADED') ?? [];
@@ -58,6 +60,7 @@ function App(): JSX.Element {
     }
 
     prevPodNamesRef.current = currentPodNames;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const breadcrumbs = validAnalyses.length > 0
@@ -114,7 +117,7 @@ function App(): JSX.Element {
 
   return (
     <div className="kd-flex kd-overflow-hidden kd-font-sans kd-text-body-md kd-bg-surface kd-text-on-surface">
-      <Sidebar />
+      <Sidebar activeNavItem={activeNavItem} onNavItemClick={setActiveNavItem} />
 
       <main className="kd-ml-60 kd-flex-1 kd-flex kd-flex-col kd-h-screen kd-overflow-hidden">
         <TopBar breadcrumbs={breadcrumbs} />

@@ -26,6 +26,7 @@ public class OpenSearchAnalysisQueryAdapter implements AiAnalysisQueryPort {
     @Override
     public List<AiAnalysisView> findAll() {
         return StreamSupport.stream(repository.findAll().spliterator(), false)
+                .filter(doc -> !"DISMISSED".equals(doc.getStatus()))
                 .sorted(Comparator.comparing(AiAnalysisDocument::getAnalyzedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(AiAnalysisDocument::toView)
                 .toList();
@@ -35,6 +36,7 @@ public class OpenSearchAnalysisQueryAdapter implements AiAnalysisQueryPort {
     public List<AiAnalysisView> findByNamespace(String namespace) {
         return repository.findByNamespaceOrderByAnalyzedAtDesc(namespace)
                 .stream()
+                .filter(doc -> !"DISMISSED".equals(doc.getStatus()))
                 .map(AiAnalysisDocument::toView)
                 .toList();
     }
@@ -43,6 +45,7 @@ public class OpenSearchAnalysisQueryAdapter implements AiAnalysisQueryPort {
     public List<AiAnalysisView> findByPodName(String podName) {
         return repository.findByPodNameOrderByAnalyzedAtDesc(podName)
                 .stream()
+                .filter(doc -> !"DISMISSED".equals(doc.getStatus()))
                 .map(AiAnalysisDocument::toView)
                 .toList();
     }

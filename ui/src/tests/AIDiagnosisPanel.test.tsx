@@ -118,9 +118,8 @@ describe('AIDiagnosisPanel', () => {
     render(<AIDiagnosisPanel {...defaultProps} />);
 
     const panel = screen.getByTestId('ai-diagnosis-panel');
-    // Panel has col-span-12 and row-span-3 for grid placement
+    // Panel has col-span-12 for grid placement
     expect(panel.className).toContain('kd-col-span-12');
-    expect(panel.className).toContain('kd-row-span-3');
 
     // The parent App Shell applies kd-animate-reveal with animationDelay.
     // We validate the panel is compatible by checking the structure is correct.

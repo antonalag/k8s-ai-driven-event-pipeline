@@ -56,7 +56,7 @@ describe('App Shell composition', () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+        expect(container.querySelectorAll('.card-enter').length).toBeGreaterThanOrEqual(2);
       });
 
       // Collect all class attributes from all elements in the rendered App Shell
@@ -77,6 +77,8 @@ describe('App Shell composition', () => {
             'cursor-blink',
             'group',
             'material-symbols-outlined',
+            'card-enter',
+            'card-exit',
           ];
 
           const isNonTailwindClass = nonTailwindPatterns.some(
@@ -104,7 +106,7 @@ describe('App Shell composition', () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+        expect(container.querySelectorAll('.card-enter').length).toBeGreaterThanOrEqual(2);
       });
 
       const rootDiv = container.firstElementChild as HTMLElement;
@@ -119,11 +121,11 @@ describe('App Shell composition', () => {
   });
 
   describe('Requirement 7.1: Staggered reveal animation delays', () => {
-    it('content panels have kd-animate-reveal class', async () => {
+    it('content panels have card-enter animation class', async () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        const revealPanels = container.querySelectorAll('.kd-animate-reveal');
+        const revealPanels = container.querySelectorAll('.card-enter');
         expect(revealPanels.length).toBeGreaterThanOrEqual(2);
       });
     });
@@ -132,10 +134,10 @@ describe('App Shell composition', () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+        expect(container.querySelectorAll('.card-enter').length).toBeGreaterThanOrEqual(2);
       });
 
-      const revealPanels = container.querySelectorAll('.kd-animate-reveal');
+      const revealPanels = container.querySelectorAll('.card-enter');
       const delays: number[] = [];
 
       revealPanels.forEach((panel) => {
@@ -155,66 +157,40 @@ describe('App Shell composition', () => {
       }
     });
 
-    it('panels have animationFillMode set to backwards for reveal effect', async () => {
+    it('panels have staggered delay based on index', async () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelectorAll('.kd-animate-reveal').length).toBeGreaterThanOrEqual(2);
+        expect(container.querySelectorAll('.card-enter').length).toBeGreaterThanOrEqual(2);
       });
 
-      const revealPanels = container.querySelectorAll('.kd-animate-reveal');
+      const revealPanels = container.querySelectorAll('.card-enter');
 
-      revealPanels.forEach((panel) => {
-        const style = (panel as HTMLElement).style;
-        expect(style.animationFillMode).toBe('backwards');
-      });
+      // First panel should have 0ms delay, second should have 100ms
+      const firstDelay = (revealPanels[0] as HTMLElement).style.animationDelay;
+      const secondDelay = (revealPanels[1] as HTMLElement).style.animationDelay;
+      expect(parseFloat(firstDelay)).toBeLessThan(parseFloat(secondDelay));
     });
   });
 
-  describe('Requirement 7.1: CSS Grid layout has 12-column and 6-row configuration', () => {
-    it('content grid has kd-grid-cols-12 class for 12-column layout', async () => {
+  describe('Requirement 7.1: Flexbox layout structure', () => {
+    it('root container uses kd-flex class', async () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelector('.kd-grid-cols-12')).not.toBeNull();
+        const rootDiv = container.firstElementChild as HTMLElement;
+        expect(rootDiv.className).toContain('kd-flex');
       });
     });
 
-    it('content grid has kd-grid-rows-6 class for 6-row layout', async () => {
+    it('main content area uses kd-flex-1 and kd-flex-col', async () => {
       const { container } = renderApp();
 
       await waitFor(() => {
-        expect(container.querySelector('.kd-grid-rows-6')).not.toBeNull();
-      });
-    });
-
-    it('content grid uses kd-grid class', async () => {
-      const { container } = renderApp();
-
-      await waitFor(() => {
-        expect(container.querySelector('.kd-grid')).not.toBeNull();
-      });
-    });
-
-    it('LogViewer panel spans 12 columns and 3 rows within the content grid', async () => {
-      const { container } = renderApp();
-
-      await waitFor(() => {
-        const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
-        expect(gridElement).not.toBeNull();
-        const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
-        expect(directPanels.length).toBeGreaterThanOrEqual(1);
-      });
-    });
-
-    it('content grid direct children are the two main panels', async () => {
-      const { container } = renderApp();
-
-      await waitFor(() => {
-        const gridElement = container.querySelector('.kd-grid-cols-12.kd-grid-rows-6');
-        expect(gridElement).not.toBeNull();
-        const directPanels = gridElement!.querySelectorAll(':scope > .kd-col-span-12.kd-row-span-3');
-        expect(directPanels.length).toBe(2);
+        const main = container.querySelector('main');
+        expect(main).not.toBeNull();
+        expect(main!.className).toContain('kd-flex-1');
+        expect(main!.className).toContain('kd-flex-col');
       });
     });
   });

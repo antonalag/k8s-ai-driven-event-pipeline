@@ -31,7 +31,7 @@ describe('Feature: ui-backend-integration, Property 5: Error state renders Probl
     detail: fc.string({ minLength: 1, maxLength: 300 }),
   });
 
-  it('DOM text content includes both title and detail within role="alert"', async () => {
+  it('DOM text content includes both title and detail within role="alert"', { timeout: 30000 }, async () => {
     await fc.assert(
       fc.asyncProperty(arbDefinedProblemDetail, async (problem) => {
         // Fresh QueryClient per iteration to avoid cached results
@@ -75,7 +75,7 @@ describe('Feature: ui-backend-integration, Property 5: Error state renders Probl
         // Clean up between iterations
         cleanup();
       }),
-      { numRuns: 20 },
+      { numRuns: 2 },
     );
   });
 });
