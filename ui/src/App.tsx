@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import { AnalysisCard } from './components/AnalysisCard';
+import { AuditLogView } from './components/AuditLogView';
 import { useAnalyses } from './api/hooks';
 import { ApiError } from './api/client';
 import EmptyState from './components/EmptyState';
@@ -123,7 +124,7 @@ function App(): JSX.Element {
         <TopBar breadcrumbs={breadcrumbs} />
 
         <div className="kd-flex-1 kd-p-4 kd-overflow-y-auto">
-          {renderContent()}
+          {activeNavItem === 'audit-log' ? <AuditLogView /> : renderContent()}
         </div>
       </main>
     </div>

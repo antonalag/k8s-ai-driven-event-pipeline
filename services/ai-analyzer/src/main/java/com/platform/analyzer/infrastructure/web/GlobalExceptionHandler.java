@@ -123,4 +123,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("currentStatus", ex.getCurrentStatus());
         return problem;
     }
+
+    @ExceptionHandler(AuditLogValidationException.class)
+    public ProblemDetail handleAuditLogValidation(AuditLogValidationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "page must be >= 0 and size must be >= 1. Got page=" + ex.getPage() + ", size=" + ex.getSize());
+        problem.setTitle("Validation Error");
+        problem.setType(VALIDATION_TYPE);
+        return problem;
+    }
 }

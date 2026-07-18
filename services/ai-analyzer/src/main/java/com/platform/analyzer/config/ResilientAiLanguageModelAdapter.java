@@ -70,7 +70,8 @@ public class ResilientAiLanguageModelAdapter implements AiLanguageModelPort {
                 DEGRADED_ROOT_CAUSE,
                 DEGRADED_ACTIONS,
                 List.of(),
-                false
+                false,
+                "unknown"
         );
     }
 }

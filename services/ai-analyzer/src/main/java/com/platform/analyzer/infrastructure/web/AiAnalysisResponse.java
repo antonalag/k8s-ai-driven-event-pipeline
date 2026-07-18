@@ -16,7 +16,8 @@ public record AiAnalysisResponse(
         String verdict,
         String rootCauseAnalysis,
         List<String> recommendedActions,
-        Instant analyzedAt
+        Instant analyzedAt,
+        String modelUsed
 ) {
 
     /**
@@ -30,7 +31,8 @@ public record AiAnalysisResponse(
                 view.verdict(),
                 view.rootCauseAnalysis(),
                 view.recommendedActions(),
-                view.analyzedAt()
+                view.analyzedAt(),
+                view.modelUsed()
         );
     }
 }

@@ -14,5 +14,6 @@ public record AiAnalysisView(
         String verdict,
         String rootCauseAnalysis,
         List<String> recommendedActions,
-        Instant analyzedAt
+        Instant analyzedAt,
+        String modelUsed
 ) {}

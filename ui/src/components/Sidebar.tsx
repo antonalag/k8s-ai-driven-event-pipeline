@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { id: 'log-explorer', label: 'Log Explorer', icon: 'description' },
   { id: 'ai-insight-engine', label: 'AI Insight Engine', icon: 'auto_awesome', isAiItem: true },
+  { id: 'audit-log', label: 'Audit Log', icon: 'history' },
 ];
 
 function Sidebar({ activeNavItem, onNavItemClick }: SidebarProps): JSX.Element {

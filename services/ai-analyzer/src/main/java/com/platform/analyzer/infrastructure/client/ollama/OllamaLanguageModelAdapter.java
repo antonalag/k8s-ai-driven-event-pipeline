@@ -143,7 +143,7 @@ public class OllamaLanguageModelAdapter implements AiLanguageModelPort {
         return new AiAnalysis(
                 parsed.podName(), parsed.namespace(), parsed.verdict(),
                 parsed.rootCauseAnalysis(), parsed.recommendedActions(),
-                toolsUsed, contextAvailable);
+                toolsUsed, contextAvailable, model);
     }
 
     protected OllamaResponse callOllama(OllamaRequest request) {

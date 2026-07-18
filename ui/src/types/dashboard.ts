@@ -6,7 +6,8 @@
 export type NavItemId =
   | 'dashboard'
   | 'log-explorer'
-  | 'ai-insight-engine';
+  | 'ai-insight-engine'
+  | 'audit-log';
 
 export interface NavItem {
   id: NavItemId;

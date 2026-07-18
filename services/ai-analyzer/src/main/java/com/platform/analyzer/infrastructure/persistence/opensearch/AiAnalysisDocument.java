@@ -60,6 +60,9 @@ public class AiAnalysisDocument {
     @Field(type = FieldType.Text)
     private String resolutionReason;
 
+    @Field(type = FieldType.Keyword)
+    private String modelUsed;
+
     public AiAnalysisDocument() {}
 
     public static AiAnalysisDocument from(AiAnalysis analysis) {
@@ -74,6 +77,7 @@ public class AiAnalysisDocument {
         doc.recommendedActions = analysis.recommendedActions();
         doc.mcpToolsUsed = analysis.mcpToolsUsed() != null ? analysis.mcpToolsUsed() : List.of();
         doc.mcpContextAvailable = analysis.mcpContextAvailable();
+        doc.modelUsed = analysis.modelUsed();
         doc.labels = new HashMap<>();
         doc.status = "PENDING";
         return doc;
@@ -85,7 +89,8 @@ public class AiAnalysisDocument {
     }
 
     public AiAnalysisView toView() {
-        return new AiAnalysisView(podName, namespace, verdict, rootCauseAnalysis, recommendedActions, analyzedAt);
+        String model = (modelUsed != null && !modelUsed.isBlank()) ? modelUsed : "unknown";
+        return new AiAnalysisView(podName, namespace, verdict, rootCauseAnalysis, recommendedActions, analyzedAt, model);
     }
 
     public String getId() { return id; }
@@ -106,4 +111,6 @@ public class AiAnalysisDocument {
     public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
     public String getResolutionReason() { return resolutionReason; }
     public void setResolutionReason(String resolutionReason) { this.resolutionReason = resolutionReason; }
+    public String getModelUsed() { return modelUsed; }
+    public void setModelUsed(String modelUsed) { this.modelUsed = modelUsed; }
 }

@@ -14,13 +14,14 @@ import Sidebar from '../components/Sidebar';
  */
 
 const navItemIdArb = fc.constantFrom<NavItemId>(
-  'dashboard', 'log-explorer', 'ai-insight-engine'
+  'dashboard', 'log-explorer', 'ai-insight-engine', 'audit-log'
 );
 
 const NAV_LABELS: Record<NavItemId, string> = {
   'dashboard': 'Dashboard',
   'log-explorer': 'Log Explorer',
   'ai-insight-engine': 'AI Insight Engine',
+  'audit-log': 'Audit Log',
 };
 
 /** Wrapper component that wires Sidebar state like the real App Shell does */
