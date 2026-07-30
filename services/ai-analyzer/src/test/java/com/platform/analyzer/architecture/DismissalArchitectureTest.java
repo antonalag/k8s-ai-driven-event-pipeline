@@ -42,7 +42,7 @@ class DismissalArchitectureTest {
     @DisplayName("Domain ports have zero Spring framework imports")
     void domainPortsHaveNoSpringDependencies() {
         noClasses()
-                .that().resideInAPackage("..domain.ports..")
+                .that().resideInAnyPackage("..domain.port..", "..domain.exception..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("org.springframework..")
                 .because("Domain ports must remain framework-independent (Requirement 8.1)")
@@ -64,7 +64,7 @@ class DismissalArchitectureTest {
     @DisplayName("Domain layer does not depend on service or infrastructure layers")
     void domainDoesNotDependOnOuterLayers() {
         noClasses()
-                .that().resideInAnyPackage("..domain.model..", "..domain.ports..")
+                .that().resideInAnyPackage("..domain.model..", "..domain.port..", "..domain.exception..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("..service..", "..infrastructure..")
                 .because("Domain layer must not reference outer layers (Requirement 8.1)")
@@ -76,7 +76,7 @@ class DismissalArchitectureTest {
     void lifecycleRepositoryAdapterImplementsDomainPort() {
         classes()
                 .that().haveSimpleName("OpenSearchLifecycleRepositoryAdapter")
-                .should().implement(com.platform.analyzer.domain.ports.AnalysisLifecycleRepositoryPort.class)
+                .should().implement(com.platform.analyzer.domain.port.outbound.AnalysisLifecycleRepositoryPort.class)
                 .because("Persistence adapters must implement domain repository ports (Requirement 8.3)")
                 .check(importedClasses);
     }
@@ -86,7 +86,7 @@ class DismissalArchitectureTest {
     void lifecycleMessagingAdapterImplementsDomainPort() {
         classes()
                 .that().haveSimpleName("KafkaLifecycleMessagingAdapter")
-                .should().implement(com.platform.analyzer.domain.ports.LifecycleMessagingPort.class)
+                .should().implement(com.platform.analyzer.domain.port.outbound.LifecycleMessagingPort.class)
                 .because("Messaging adapters must implement domain messaging ports (Requirement 8.3)")
                 .check(importedClasses);
     }
@@ -96,7 +96,7 @@ class DismissalArchitectureTest {
     void messagingAdapterImplementsDomainPort() {
         classes()
                 .that().haveSimpleName("KafkaMessagingAdapter")
-                .should().implement(com.platform.analyzer.domain.ports.LmMessagingPort.class)
+                .should().implement(com.platform.analyzer.domain.port.outbound.LmMessagingPort.class)
                 .because("Messaging adapters must implement domain messaging ports (Requirement 8.3)")
                 .check(importedClasses);
     }
@@ -106,7 +106,7 @@ class DismissalArchitectureTest {
     void analysisRepositoryAdapterImplementsDomainPort() {
         classes()
                 .that().haveSimpleName("OpenSearchAnalysisRepository")
-                .should().implement(com.platform.analyzer.domain.ports.AiAnalysisRepositoryPort.class)
+                .should().implement(com.platform.analyzer.domain.port.outbound.AiAnalysisRepositoryPort.class)
                 .because("Persistence adapters must implement domain repository ports (Requirement 8.3)")
                 .check(importedClasses);
     }
@@ -116,7 +116,7 @@ class DismissalArchitectureTest {
     void queryAdapterImplementsDomainPort() {
         classes()
                 .that().haveSimpleName("OpenSearchAnalysisQueryAdapter")
-                .should().implement(com.platform.analyzer.domain.ports.AiAnalysisQueryPort.class)
+                .should().implement(com.platform.analyzer.domain.port.inbound.AiAnalysisQueryPort.class)
                 .because("Query adapters must implement domain query ports (Requirement 8.3)")
                 .check(importedClasses);
     }

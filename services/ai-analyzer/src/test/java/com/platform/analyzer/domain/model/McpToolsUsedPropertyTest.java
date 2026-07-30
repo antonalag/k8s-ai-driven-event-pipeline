@@ -1,5 +1,7 @@
 package com.platform.analyzer.domain.model;
 
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
 import net.jqwik.api.*;
 
 import java.util.List;

@@ -5,15 +5,12 @@
 
 export type NavItemId =
   | 'dashboard'
-  | 'log-explorer'
-  | 'ai-insight-engine'
   | 'audit-log';
 
 export interface NavItem {
   id: NavItemId;
   label: string;
   icon: string;
-  isAiItem?: boolean;
 }
 
 export type LogSeverity = 'INFO' | 'WARN' | 'ERROR' | 'CRIT';

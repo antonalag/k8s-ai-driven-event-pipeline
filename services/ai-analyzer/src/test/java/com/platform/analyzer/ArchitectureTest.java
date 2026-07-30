@@ -30,6 +30,7 @@ class ArchitectureTest {
     void domainShouldNotDependOnSpringFramework() {
         noClasses()
                 .that().resideInAnyPackage("com.platform.analyzer.domain..")
+                .and().resideOutsideOfPackage("com.platform.analyzer.domain.service..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("org.springframework..")
                 .because("Domain layer must remain framework-independent (Requirement 2.2)")
@@ -51,7 +52,7 @@ class ArchitectureTest {
         noClasses()
                 .that().resideInAnyPackage("com.platform.analyzer.domain..")
                 .should().dependOnClassesThat()
-                .resideInAnyPackage("com.platform.analyzer.config..")
+                .resideInAnyPackage("com.platform.analyzer.config..", "com.platform.analyzer.infrastructure.config..")
                 .because("Domain must not depend on configuration layer (Requirement 2.3)")
                 .check(importedClasses);
     }
@@ -59,7 +60,7 @@ class ArchitectureTest {
     @Test
     void domainAndServiceShouldNotDependOnResilience4j() {
         noClasses()
-                .that().resideInAnyPackage("com.platform.analyzer.domain..", "com.platform.analyzer.service..")
+                .that().resideInAnyPackage("com.platform.analyzer.domain..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage("io.github.resilience4j..")
                 .because("Domain and service layers must remain free of resilience infrastructure (Requirement 6.1)")

@@ -1,11 +1,15 @@
 package com.platform.analyzer.domain.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.platform.analyzer.config.ByokProperties;
-import com.platform.analyzer.infrastructure.client.byok.*;
-import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
-import com.platform.analyzer.infrastructure.client.ollama.OllamaRequest;
-import com.platform.analyzer.infrastructure.client.ollama.OllamaResponse;
+import com.platform.analyzer.infrastructure.config.properties.ByokProperties;
+import com.platform.analyzer.domain.model.enums.PodPhase;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.byok.*;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.ollama.OllamaLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.ollama.OllamaRequest;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.ollama.OllamaResponse;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.NotBlank;
 

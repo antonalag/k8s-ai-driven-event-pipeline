@@ -1,12 +1,17 @@
 package com.platform.analyzer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.platform.analyzer.domain.ports.AiLanguageModelPort;
-import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
-import com.platform.analyzer.infrastructure.client.byok.ByokLanguageModelAdapter;
-import com.platform.analyzer.infrastructure.client.byok.ByokPayloadMapper;
-import com.platform.analyzer.infrastructure.client.byok.ByokResponseExtractor;
-import com.platform.analyzer.infrastructure.client.ollama.OllamaLanguageModelAdapter;
+import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
+import com.platform.analyzer.domain.port.outbound.PromptCalibrationStrategy;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.byok.ByokLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.byok.ByokPayloadMapper;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.byok.ByokResponseExtractor;
+import com.platform.analyzer.infrastructure.adapter.outbound.ai.ollama.OllamaLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.config.bean.AiProviderValidator;
+import com.platform.analyzer.infrastructure.config.bean.ByokConfig;
+import com.platform.analyzer.infrastructure.config.bean.OllamaConfig;
+import com.platform.analyzer.infrastructure.config.properties.ByokProperties;
+import com.platform.analyzer.infrastructure.config.properties.PlatformProperties;
 import com.platform.analyzer.infrastructure.prompt.DefaultPromptCalibrationStrategy;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;

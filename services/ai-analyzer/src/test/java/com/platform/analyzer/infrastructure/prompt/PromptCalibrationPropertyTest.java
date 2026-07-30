@@ -1,9 +1,9 @@
 package com.platform.analyzer.infrastructure.prompt;
 
-import com.platform.analyzer.domain.model.EnrichedContext;
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.model.PodPhase;
-import com.platform.analyzer.service.PromptTruncator;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.model.enums.PodPhase;
+import com.platform.analyzer.domain.service.PromptTruncator;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.IntRange;
 

@@ -3,7 +3,7 @@ package com.platform.analyzer.infrastructure.logging;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.platform.analyzer.domain.ports.PipelineTracer;
+import com.platform.analyzer.domain.port.outbound.PipelineTracer;
 import net.jqwik.api.*;
 
 import java.io.ByteArrayOutputStream;

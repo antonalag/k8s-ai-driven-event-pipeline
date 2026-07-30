@@ -1,5 +1,6 @@
 package com.platform.analyzer.domain.model;
 
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.jqwik.api.*;

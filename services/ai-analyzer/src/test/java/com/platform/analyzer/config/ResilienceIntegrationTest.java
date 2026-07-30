@@ -1,10 +1,13 @@
 package com.platform.analyzer.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.platform.analyzer.domain.model.AiAnalysis;
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.model.PodPhase;
-import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.model.enums.PodPhase;
+import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
+import com.platform.analyzer.infrastructure.adapter.outbound.resilience.ResilientAiLanguageModelAdapter;
+import com.platform.analyzer.infrastructure.config.bean.ResilienceConfig;
+import com.platform.analyzer.infrastructure.config.properties.PlatformProperties;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;

@@ -1,7 +1,7 @@
 package com.platform.analyzer.infrastructure.e2e;
 
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.model.PodPhase;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.model.enums.PodPhase;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

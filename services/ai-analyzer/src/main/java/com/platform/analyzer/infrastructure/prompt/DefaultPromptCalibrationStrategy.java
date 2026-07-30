@@ -1,8 +1,8 @@
 package com.platform.analyzer.infrastructure.prompt;
 
-import com.platform.analyzer.domain.model.EnrichedContext;
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.ports.PromptCalibrationStrategy;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.port.outbound.PromptCalibrationStrategy;
 import org.springframework.stereotype.Component;
 
 /**

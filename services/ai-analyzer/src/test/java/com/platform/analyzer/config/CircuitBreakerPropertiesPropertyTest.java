@@ -1,5 +1,6 @@
 package com.platform.analyzer.config;
 
+import com.platform.analyzer.infrastructure.config.properties.CircuitBreakerProperties;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

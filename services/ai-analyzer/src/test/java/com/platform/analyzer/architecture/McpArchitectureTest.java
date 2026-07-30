@@ -32,8 +32,8 @@ class McpArchitectureTest {
     void mcpContextPortShouldResideInDomainPortsPackage() {
         classes()
                 .that().haveSimpleName("McpContextPort")
-                .should().resideInAPackage("com.platform.analyzer.domain.ports")
-                .because("McpContextPort is a domain port and must reside in domain.ports (Requirement 5.1)")
+                .should().resideInAPackage("com.platform.analyzer.domain.port.outbound")
+                .because("McpContextPort is a domain port and must reside in domain.port.outbound (Requirement 5.1)")
                 .check(importedClasses);
     }
 
@@ -41,8 +41,8 @@ class McpArchitectureTest {
     void enrichedContextShouldResideInDomainModelPackage() {
         classes()
                 .that().haveSimpleName("EnrichedContext")
-                .should().resideInAPackage("com.platform.analyzer.domain.model")
-                .because("EnrichedContext is a domain value object and must reside in domain.model (Requirement 5.1)")
+                .should().resideInAPackage("com.platform.analyzer.domain.model.valueobject")
+                .because("EnrichedContext is a domain value object and must reside in domain.model.valueobject (Requirement 5.1)")
                 .check(importedClasses);
     }
 
@@ -60,7 +60,7 @@ class McpArchitectureTest {
     void mcpClientAdapterShouldImplementMcpContextPort() {
         classes()
                 .that().haveSimpleName("McpClientAdapter")
-                .should().implement(com.platform.analyzer.domain.ports.McpContextPort.class)
+                .should().implement(com.platform.analyzer.domain.port.outbound.McpContextPort.class)
                 .because("McpClientAdapter is the infrastructure adapter for McpContextPort (Requirement 5.1)")
                 .check(importedClasses);
     }
@@ -69,17 +69,17 @@ class McpArchitectureTest {
     void mcpClientAdapterShouldResideInInfrastructureClientMcpPackage() {
         classes()
                 .that().haveSimpleName("McpClientAdapter")
-                .should().resideInAPackage("com.platform.analyzer.infrastructure.client.mcp")
-                .because("McpClientAdapter is an infrastructure adapter and must reside in infrastructure.client.mcp (Requirement 5.1)")
+                .should().resideInAPackage("com.platform.analyzer.infrastructure.adapter.outbound.mcp")
+                .because("McpClientAdapter is an infrastructure adapter and must reside in infrastructure.adapter.outbound.mcp (Requirement 5.1)")
                 .check(importedClasses);
     }
 
     @Test
-    void resilientMcpContextAdapterShouldResideInConfigPackage() {
+    void resilientMcpContextAdapterShouldResideInResiliencePackage() {
         classes()
                 .that().haveSimpleName("ResilientMcpContextAdapter")
-                .should().resideInAPackage("com.platform.analyzer.config")
-                .because("ResilientMcpContextAdapter follows the existing ResilienceConfig pattern in the config layer (Requirement 6.1)")
+                .should().resideInAPackage("com.platform.analyzer.infrastructure.adapter.outbound.resilience")
+                .because("ResilientMcpContextAdapter is a resilience decorator in infrastructure.adapter.outbound.resilience (Requirement 6.1)")
                 .check(importedClasses);
     }
 }

@@ -1,7 +1,8 @@
 package com.platform.analyzer.config;
 
-import com.platform.analyzer.domain.ports.AiAnalysisQueryPort;
-import com.platform.analyzer.infrastructure.web.AiAnalysisQueryController;
+import com.platform.analyzer.domain.port.inbound.AiAnalysisQueryPort;
+import com.platform.analyzer.infrastructure.adapter.inbound.web.controller.AiAnalysisQueryController;
+import com.platform.analyzer.infrastructure.config.bean.CorsConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

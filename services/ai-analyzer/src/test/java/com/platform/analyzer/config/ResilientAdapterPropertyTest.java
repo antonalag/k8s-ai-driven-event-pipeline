@@ -1,10 +1,11 @@
 package com.platform.analyzer.config;
 
-import com.platform.analyzer.domain.model.AiAnalysis;
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.model.PodPhase;
-import com.platform.analyzer.domain.ports.AiAnalysisException;
-import com.platform.analyzer.domain.ports.AiLanguageModelPort;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.model.enums.PodPhase;
+import com.platform.analyzer.domain.exception.AiAnalysisException;
+import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
+import com.platform.analyzer.infrastructure.adapter.outbound.resilience.ResilientAiLanguageModelAdapter;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;

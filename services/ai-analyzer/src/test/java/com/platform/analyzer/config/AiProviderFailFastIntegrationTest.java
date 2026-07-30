@@ -1,5 +1,7 @@
 package com.platform.analyzer.config;
 
+import com.platform.analyzer.infrastructure.config.bean.AiProviderValidator;
+import com.platform.analyzer.infrastructure.config.properties.PlatformProperties;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

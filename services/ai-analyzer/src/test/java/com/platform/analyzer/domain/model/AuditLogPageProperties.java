@@ -1,5 +1,8 @@
 package com.platform.analyzer.domain.model;
 
+import com.platform.analyzer.domain.model.enums.AnalysisStatus;
+import com.platform.analyzer.domain.model.valueobject.AuditLogEntry;
+import com.platform.analyzer.domain.model.valueobject.AuditLogPage;
 import net.jqwik.api.*;
 import net.jqwik.api.constraints.IntRange;
 

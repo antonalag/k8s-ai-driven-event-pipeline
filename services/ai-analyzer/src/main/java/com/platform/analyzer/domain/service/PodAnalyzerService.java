@@ -1,0 +1,81 @@
+package com.platform.analyzer.domain.service;
+
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.port.outbound.AiAnalysisRepositoryPort;
+import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
+import com.platform.analyzer.domain.port.outbound.CircuitBreakerStatePort;
+import com.platform.analyzer.domain.port.outbound.McpContextPort;
+import com.platform.analyzer.domain.port.outbound.PipelineTracer;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Application service that orchestrates AI analysis of Kubernetes events.
+ * Integrates pipeline tracing for E2E observability (correlation IDs,
+ * circuit breaker state, per-tool timing, and threshold monitoring).
+ */
+@Service
+public class PodAnalyzerService {
+
+    private static final long THRESHOLD_MS = 30_000;
+
+    private final AiLanguageModelPort aiLanguageModel;
+    private final AiAnalysisRepositoryPort aiAnalysisRepositoryPort;
+    private final McpContextPort mcpContextPort;
+    private final PipelineTracer pipelineTracer;
+    private final CircuitBreakerStatePort circuitBreakerStatePort;
+
+    public PodAnalyzerService(AiLanguageModelPort aiLanguageModel,
+                                 AiAnalysisRepositoryPort aiAnalysisRepositoryPort,
+                                 McpContextPort mcpContextPort,
+                                 PipelineTracer pipelineTracer,
+                                 CircuitBreakerStatePort circuitBreakerStatePort) {
+        this.aiLanguageModel = aiLanguageModel;
+        this.aiAnalysisRepositoryPort = aiAnalysisRepositoryPort;
+        this.mcpContextPort = mcpContextPort;
+        this.pipelineTracer = pipelineTracer;
+        this.circuitBreakerStatePort = circuitBreakerStatePort;
+    }
+
+    public AiAnalysis analyse(KubernetesEvent event) {
+        String correlationId = UUID.randomUUID().toString();
+        long cycleStart = System.currentTimeMillis();
+
+        String cbState = circuitBreakerStatePort.getMcpCircuitBreakerState();
+        pipelineTracer.logCycleStart(correlationId, cbState, event.podName(), event.namespace());
+
+        List<AiAnalysis> history = aiAnalysisRepositoryPort.findByPodName(event.podName());
+
+        long mcpStart = System.currentTimeMillis();
+        EnrichedContext context = mcpContextPort.retrieveContext(event.podName(), event.namespace());
+        long mcpElapsed = System.currentTimeMillis() - mcpStart;
+
+        logToolResults(correlationId, context, mcpElapsed);
+
+        AiAnalysis result = aiLanguageModel.analyze(event, history, context);
+
+        long totalTime = System.currentTimeMillis() - cycleStart;
+        pipelineTracer.logCycleComplete(correlationId, event.podName(), event.namespace(),
+                context.toolsUsed().size(), totalTime, result.verdict());
+
+        if (totalTime > THRESHOLD_MS) {
+            pipelineTracer.logThresholdExceeded(correlationId, totalTime);
+        }
+
+        return result;
+    }
+
+    private void logToolResults(String correlationId, EnrichedContext context, long mcpElapsed) {
+        List<String> allTools = List.of("describe_pod", "get_events", "get_logs");
+        long avgTime = context.toolsUsed().isEmpty() ? 0 : mcpElapsed / context.toolsUsed().size();
+
+        for (String tool : allTools) {
+            boolean success = context.toolsUsed().contains(tool);
+            pipelineTracer.logToolResult(correlationId, tool, success ? avgTime : 0, success);
+        }
+    }
+}

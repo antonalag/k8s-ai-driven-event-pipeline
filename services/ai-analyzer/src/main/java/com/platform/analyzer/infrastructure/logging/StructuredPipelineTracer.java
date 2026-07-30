@@ -1,6 +1,6 @@
 package com.platform.analyzer.infrastructure.logging;
 
-import com.platform.analyzer.domain.ports.PipelineTracer;
+import com.platform.analyzer.domain.port.outbound.PipelineTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

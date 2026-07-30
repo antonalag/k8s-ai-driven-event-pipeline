@@ -5,13 +5,10 @@ interface NavItemConfig {
   id: NavItemId;
   label: string;
   icon: string;
-  isAiItem?: boolean;
 }
 
 const NAV_ITEMS: NavItemConfig[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { id: 'log-explorer', label: 'Log Explorer', icon: 'description' },
-  { id: 'ai-insight-engine', label: 'AI Insight Engine', icon: 'auto_awesome', isAiItem: true },
   { id: 'audit-log', label: 'Audit Log', icon: 'history' },
 ];
 
@@ -43,9 +40,7 @@ function Sidebar({ activeNavItem, onNavItemClick }: SidebarProps): JSX.Element {
             <span className="material-symbols-outlined kd-text-lg kd-transition-transform group-hover:kd-scale-110">
               {item.icon}
             </span>
-            <span className={`kd-font-sans kd-text-body-md kd-font-medium kd-transition-transform ${
-              !item.isAiItem ? 'group-hover:kd-translate-x-1' : ''
-            }`}>
+            <span className="kd-font-sans kd-text-body-md kd-font-medium kd-transition-transform group-hover:kd-translate-x-1">
               {item.label}
             </span>
           </button>

@@ -19,10 +19,6 @@ export function DismissButton({ analysisId }: DismissButtonProps): JSX.Element {
     }
   }
 
-  function handleQuickDismiss() {
-    mutate({ analysisId, reason: 'Dismissed by operator' });
-  }
-
   function handleCancel() {
     setShowReasonInput(false);
     setReason('');
@@ -94,26 +90,14 @@ export function DismissButton({ analysisId }: DismissButtonProps): JSX.Element {
   }
 
   return (
-    <div className="kd-flex kd-items-center kd-gap-1">
-      <button
-        onClick={handleDismiss}
-        disabled={isPending}
-        aria-label="Dismiss analysis with reason"
-        className="kd-px-2 kd-py-1 kd-font-sans kd-text-code-sm kd-border kd-border-outline-variant kd-rounded kd-text-on-surface-variant hover:kd-border-secondary hover:kd-text-secondary kd-transition-colors kd-duration-200 disabled:kd-opacity-50"
-        data-testid="dismiss-button"
-      >
-        Dismiss
-      </button>
-      <button
-        onClick={handleQuickDismiss}
-        disabled={isPending}
-        aria-label="Quick dismiss"
-        title="Dismiss without reason"
-        className="kd-px-1.5 kd-py-1 kd-font-sans kd-text-code-sm kd-text-on-surface-variant hover:kd-text-secondary kd-transition-colors kd-duration-200 disabled:kd-opacity-50"
-        data-testid="dismiss-quick-button"
-      >
-        ✕
-      </button>
-    </div>
+    <button
+      onClick={handleDismiss}
+      disabled={isPending}
+      aria-label="Dismiss analysis"
+      className="kd-px-2 kd-py-1 kd-font-sans kd-text-code-sm kd-border kd-border-outline-variant kd-rounded kd-text-on-surface-variant hover:kd-border-secondary hover:kd-text-secondary kd-transition-colors kd-duration-200 disabled:kd-opacity-50"
+      data-testid="dismiss-button"
+    >
+      Dismiss
+    </button>
   );
 }

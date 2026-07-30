@@ -1,15 +1,15 @@
 package com.platform.analyzer.infrastructure.e2e;
 
-import com.platform.analyzer.domain.model.AiAnalysis;
-import com.platform.analyzer.domain.model.EnrichedContext;
-import com.platform.analyzer.domain.model.KubernetesEvent;
-import com.platform.analyzer.domain.model.PodPhase;
-import com.platform.analyzer.domain.ports.AiAnalysisRepositoryPort;
-import com.platform.analyzer.domain.ports.AiLanguageModelPort;
-import com.platform.analyzer.domain.ports.CircuitBreakerStatePort;
-import com.platform.analyzer.domain.ports.McpContextPort;
-import com.platform.analyzer.domain.ports.PipelineTracer;
-import com.platform.analyzer.service.PodAnalyzerService;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.model.valueobject.KubernetesEvent;
+import com.platform.analyzer.domain.model.enums.PodPhase;
+import com.platform.analyzer.domain.port.outbound.AiAnalysisRepositoryPort;
+import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
+import com.platform.analyzer.domain.port.outbound.CircuitBreakerStatePort;
+import com.platform.analyzer.domain.port.outbound.McpContextPort;
+import com.platform.analyzer.domain.port.outbound.PipelineTracer;
+import com.platform.analyzer.domain.service.PodAnalyzerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

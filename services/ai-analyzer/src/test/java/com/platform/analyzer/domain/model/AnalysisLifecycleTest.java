@@ -1,5 +1,8 @@
 package com.platform.analyzer.domain.model;
 
+import com.platform.analyzer.domain.model.entity.AnalysisLifecycle;
+import com.platform.analyzer.domain.model.enums.AnalysisStatus;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

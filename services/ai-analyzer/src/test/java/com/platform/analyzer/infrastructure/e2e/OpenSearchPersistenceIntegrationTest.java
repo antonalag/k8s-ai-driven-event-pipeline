@@ -1,9 +1,9 @@
 package com.platform.analyzer.infrastructure.e2e;
 
-import com.platform.analyzer.domain.model.AiAnalysis;
-import com.platform.analyzer.infrastructure.persistence.opensearch.AiAnalysisDocument;
-import com.platform.analyzer.infrastructure.persistence.opensearch.OpenSearchAnalysisRepository;
-import com.platform.analyzer.infrastructure.persistence.opensearch.SpringDataAiAnalysisRepository;
+import com.platform.analyzer.domain.model.valueobject.AiAnalysis;
+import com.platform.analyzer.infrastructure.adapter.outbound.persistence.AiAnalysisDocument;
+import com.platform.analyzer.infrastructure.adapter.outbound.persistence.OpenSearchAnalysisRepository;
+import com.platform.analyzer.infrastructure.adapter.outbound.persistence.SpringDataAiAnalysisRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

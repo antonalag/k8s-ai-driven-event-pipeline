@@ -1,8 +1,8 @@
 package com.platform.analyzer.infrastructure.e2e;
 
-import com.platform.analyzer.config.ResilientMcpContextAdapter;
-import com.platform.analyzer.domain.model.EnrichedContext;
-import com.platform.analyzer.domain.ports.McpContextPort;
+import com.platform.analyzer.infrastructure.adapter.outbound.resilience.ResilientMcpContextAdapter;
+import com.platform.analyzer.domain.model.valueobject.EnrichedContext;
+import com.platform.analyzer.domain.port.outbound.McpContextPort;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

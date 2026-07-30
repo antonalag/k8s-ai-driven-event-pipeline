@@ -73,13 +73,15 @@ Key design decisions:
                                           └────────────────────────────────────────────┘
           ▲
           │ GET /api/v1/analyses
+          │ GET /api/v1/analyses/history
           │ POST /api/v1/remediations
           │ POST /api/v1/analyses/{id}/dismiss
           │
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
 │                     Observability UI (React 18 / TypeScript / Tailwind CSS)              │
 │                                                                                          │
-│  TanStack Query polling (5s) — RFC 7807 error parsing — 1-click remediation — dismiss     │
+│  TanStack Query polling (5s) — RFC 7807 error parsing — 1-click remediation — dismiss    │
+│  Audit Log tab with paginated history of resolved analyses (30s staleTime)               │
 │  Served via Nginx reverse-proxy (zero-CORS in container mode)                            │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -88,13 +90,13 @@ Key design decisions:
 
 | Principle | Implementation |
 |-----------|---------------|
-| **Hexagonal Architecture** | Pure domain layer with no framework annotations. Infrastructure adapters implement domain ports (SPI). |
+| **Hexagonal Architecture** | Pure domain layer (`domain/model/`, `domain/port/inbound/`, `domain/port/outbound/`, `domain/exception/`, `domain/service/`). Infrastructure adapters organized in `adapter/inbound/` (web, messaging) and `adapter/outbound/` (ai, mcp, persistence, messaging, resilience). |
 | **Contract-First** | Every data boundary has a JSON Schema (`specs/schemas/`). AI output is validated before acceptance. |
 | **Event-Driven Decoupling** | Kafka separates ingestion from analysis from persistence. Each stage can fail independently. |
 | **MCP as Semantic Firewall** | The MCP Server is the sole gateway to cluster state. It exposes curated, parameterized tools — no raw kubectl passthrough. Runs in live mode with real K8s API access. |
 | **BYOK (Bring Your Own Key)** | Runtime AI provider selection via environment variable. Supports Ollama (local) or any OpenAI-compatible endpoint. |
 | **Supply-Chain Security** | All container images and CI actions are SHA-256 pinned. No mutable tags. |
-| **Lifecycle Management** | Analysis reports follow a state machine (PENDING → DISMISSED / REMEDIATED). Dismissed analyses are excluded from active views. |
+| **Lifecycle Management** | Analysis reports follow a state machine (PENDING → DISMISSED / REMEDIATED). Dismissed analyses are excluded from active views and appear in the paginated Audit Log history. |
 
 ---
 
@@ -230,6 +232,12 @@ The `make init` target runs a comprehensive pre-flight script that:
 | OpenSearch | http://localhost:9200 |
 | Kafka (external) | localhost:9092 |
 
+**Key API Endpoints:**
+- `GET /api/v1/analyses` — Active analysis cards (latest per deployment, excludes resolved)
+- `GET /api/v1/analyses/history?page=0&size=20` — Paginated audit log (REMEDIATED + DISMISSED only)
+- `POST /api/v1/remediations` — Execute a remediation action
+- `POST /api/v1/analyses/{id}/dismiss` — Dismiss an analysis
+
 ### Environment Configuration
 
 Copy `.env.example` to `.env` and configure your AI provider:
@@ -258,7 +266,7 @@ BYOK_PROVIDER_TYPE=OPENAI_COMPATIBLE
 k8s-ai-driven-event-pipeline/
 ├── services/
 │   ├── k8s-collector/        # Kubernetes Informer → Kafka producer (Spring Boot)
-│   ├── ai-analyzer/          # Consumer + AI reasoning + REST API (Spring Boot)
+│   ├── ai-analyzer/          # Consumer + AI reasoning + REST API (Spring Boot, Hexagonal Architecture)
 │   └── mcp-server/           # MCP tool server (Node.js/TypeScript, JSON-RPC 2.0)
 ├── ui/                       # Observability Dashboard (React + TypeScript + Vite)
 ├── deployments/
@@ -273,6 +281,7 @@ k8s-ai-driven-event-pipeline/
 ├── docs/
 │   ├── system.spec.md        # System constitution & roadmap
 │   ├── golden-path.md        # Demo scenario technical script
+│   ├── e2e-test-plan.md      # Manual QA checklist (45 checks)
 │   └── chaos-checks.md       # Resilience certification report
 ├── images/                   # Golden path walkthrough screenshots
 ├── .github/workflows/ci.yml  # CI pipeline (SHA-pinned, Trivy scan)
