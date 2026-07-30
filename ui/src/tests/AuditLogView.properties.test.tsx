@@ -1,7 +1,7 @@
 // Feature: audit-log-history, Properties 8–11: Frontend property-based tests
 // @vitest-environment jsdom
 
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { render, cleanup } from '@testing-library/react';
 
@@ -63,7 +63,8 @@ describe('Property 8: Status-Driven Badge Color Mapping', () => {
           isLoading: false,
           isError: false,
           error: null,
-        } as ReturnType<typeof useAuditLogHistory>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
         const { container } = render(<AuditLogView />);
 
@@ -132,7 +133,8 @@ describe('Property 9: Pagination Control State Correctness', () => {
           isLoading: false,
           isError: false,
           error: null,
-        } as ReturnType<typeof useAuditLogHistory>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
         const { container } = render(<AuditLogView />);
 
@@ -190,7 +192,8 @@ describe('Property 10: RFC 7807 Error Notification Rendering', () => {
           isLoading: false,
           isError: true,
           error: apiError,
-        } as unknown as ReturnType<typeof useAuditLogHistory>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
         const { container } = render(<AuditLogView />);
 
@@ -242,7 +245,8 @@ describe('Property 11: Table Column Completeness', () => {
           isLoading: false,
           isError: false,
           error: null,
-        } as ReturnType<typeof useAuditLogHistory>);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
         const { container } = render(<AuditLogView />);
 

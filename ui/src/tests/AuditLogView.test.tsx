@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import type { HistoryResponseDto, AuditLogHistoryResponse } from '../types/api';
+import type { HistoryResponseDto } from '../types/api';
 
 vi.mock('../hooks/useAuditLogHistory', () => ({
   useAuditLogHistory: vi.fn(),
@@ -42,7 +42,7 @@ describe('AuditLogView - Loading state', () => {
       isLoading: true,
       isError: false,
       error: null,
-    } as ReturnType<typeof useAuditLogHistory>);
+    } as unknown as ReturnType<typeof useAuditLogHistory>);
 
     const { container } = render(<AuditLogView />);
 
@@ -59,7 +59,7 @@ describe('AuditLogView - Empty state', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useAuditLogHistory>);
+    } as unknown as ReturnType<typeof useAuditLogHistory>);
 
     render(<AuditLogView />);
 
@@ -81,7 +81,7 @@ describe('AuditLogView - Error state', () => {
       isLoading: false,
       isError: true,
       error: apiError,
-    } as ReturnType<typeof useAuditLogHistory>);
+    } as unknown as ReturnType<typeof useAuditLogHistory>);
 
     render(<AuditLogView />);
 
@@ -119,7 +119,7 @@ describe('AuditLogView - Table rendering with data', () => {
       isLoading: false,
       isError: false,
       error: null,
-    } as ReturnType<typeof useAuditLogHistory>);
+    } as unknown as ReturnType<typeof useAuditLogHistory>);
 
     const { container } = render(<AuditLogView />);
 
