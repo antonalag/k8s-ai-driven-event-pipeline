@@ -135,6 +135,9 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew scripts/seed-kafka-events.sh
 
+      - name: Create .env from example
+        run: cp .env.example .env
+
       - name: Run E2E pipeline
         run: make test-e2e
 
