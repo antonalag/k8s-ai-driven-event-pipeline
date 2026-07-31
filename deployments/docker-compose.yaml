@@ -14,7 +14,7 @@ include:
 
 services:
   opensearch:
-    image: opensearchproject/opensearch:2.18.0
+    image: opensearchproject/opensearch:2.18.0@sha256:9562dd2eb884b3c1be6084760112b62b883b00f451c3fb3217c916a1dbcda18b
     container_name: opensearch
     environment:
       discovery.type: single-node

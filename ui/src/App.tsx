@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import { AnalysisCard } from './components/AnalysisCard';
 import { AuditLogView } from './components/AuditLogView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAnalyses } from './api/hooks';
 import { ApiError } from './api/client';
 import EmptyState from './components/EmptyState';
@@ -102,17 +103,19 @@ function App(): JSX.Element {
     }
 
     return (
-      <div className="kd-space-y-3">
-        {displayItems.map((item, index) => (
-          <div
-            key={item.analysis.podName}
-            className={item.exiting ? 'card-exit' : 'card-enter'}
-            style={!item.exiting ? { animationDelay: `${index * 100}ms` } : undefined}
-          >
-            <AnalysisCard analysis={item.analysis} />
-          </div>
-        ))}
-      </div>
+      <ErrorBoundary fallbackMessage="Error loading analysis cards.">
+        <div className="kd-space-y-3">
+          {displayItems.map((item, index) => (
+            <div
+              key={item.analysis.podName}
+              className={item.exiting ? 'card-exit' : 'card-enter'}
+              style={!item.exiting ? { animationDelay: `${index * 100}ms` } : undefined}
+            >
+              <AnalysisCard analysis={item.analysis} />
+            </div>
+          ))}
+        </div>
+      </ErrorBoundary>
     );
   }
 
@@ -124,7 +127,7 @@ function App(): JSX.Element {
         <TopBar breadcrumbs={breadcrumbs} />
 
         <div className="kd-flex-1 kd-p-4 kd-overflow-y-auto">
-          {activeNavItem === 'audit-log' ? <AuditLogView /> : renderContent()}
+          {activeNavItem === 'audit-log' ? <ErrorBoundary fallbackMessage="Error loading audit log."><AuditLogView /></ErrorBoundary> : renderContent()}
         </div>
       </main>
     </div>

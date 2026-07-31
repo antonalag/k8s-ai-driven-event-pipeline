@@ -8,7 +8,6 @@ import com.platform.analyzer.domain.port.outbound.AiLanguageModelPort;
 import com.platform.analyzer.domain.port.outbound.CircuitBreakerStatePort;
 import com.platform.analyzer.domain.port.outbound.McpContextPort;
 import com.platform.analyzer.domain.port.outbound.PipelineTracer;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +17,6 @@ import java.util.UUID;
  * Integrates pipeline tracing for E2E observability (correlation IDs,
  * circuit breaker state, per-tool timing, and threshold monitoring).
  */
-@Service
 public class PodAnalyzerService {
 
     private static final long THRESHOLD_MS = 30_000;

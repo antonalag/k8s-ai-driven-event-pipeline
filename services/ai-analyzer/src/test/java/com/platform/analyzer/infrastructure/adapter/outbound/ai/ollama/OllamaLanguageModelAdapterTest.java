@@ -51,7 +51,9 @@ class OllamaLanguageModelAdapterTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .addMixIn(AiAnalysis.class, com.platform.analyzer.infrastructure.config.jackson.AiAnalysisMixin.class);
     }
 
     private OllamaLanguageModelAdapter adapterWithMockedResponse(OllamaResponse response) {

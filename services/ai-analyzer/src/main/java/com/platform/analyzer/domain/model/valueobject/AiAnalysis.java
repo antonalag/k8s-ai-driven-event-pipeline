@@ -1,7 +1,5 @@
 package com.platform.analyzer.domain.model.valueobject;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.util.List;
 
 /**
@@ -9,7 +7,6 @@ import java.util.List;
  * Extended in Phase 15 with additive MCP intelligence fields.
  * Extended with modelUsed tracking for audit log history.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record AiAnalysis(
         String podName,
         String namespace,

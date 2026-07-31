@@ -9,7 +9,6 @@ import com.platform.analyzer.domain.port.outbound.AiAnalysisRepositoryPort;
 import com.platform.analyzer.domain.port.outbound.RemediationPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +19,6 @@ import java.util.UUID;
  * Coordinates command construction, port dispatch, and structured audit logging.
  * On successful remediation, persists a HEALTHY verdict to close the diagnostic loop.
  */
-@Service
 public class RemediationOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(RemediationOrchestrator.class);

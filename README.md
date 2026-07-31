@@ -20,6 +20,21 @@ Key design decisions:
 - **Operator-controlled lifecycle.** Every analysis card can be dismissed with an audit trail, or remediated with a single click. Both paths produce structured events for downstream processing.
 - **Fail-fast over retry.** Three independent circuit breakers ensure a failing subsystem (AI provider, MCP server, or mutation path) degrades gracefully without contaminating healthy paths.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    K8s["☸ K8s Cluster"] -->|Watch Events| KC[k8s-collector]
+    KC -->|Produce| KF[(Apache Kafka)]
+    KF -->|Consume| AI[ai-analyzer]
+    AI -->|Index| OS[(OpenSearch)]
+    OS -->|Query| UI[Observability UI]
+    UI -->|Remediate| AI
+    AI -.->|"JSON-RPC 2.0"| MCP[MCP Server]
+    MCP -.->|"Cluster Context"| AI
+    MCP -.->|"K8s API"| K8s
+```
+
 ---
 
 ## Architecture Deep Dive
