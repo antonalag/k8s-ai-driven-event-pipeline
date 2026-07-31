@@ -117,6 +117,69 @@ flowchart LR
 
 ---
 
+## E2E Testing
+
+End-to-end tests validate the full pipeline integration using Playwright against the real Docker Compose stack.
+
+### Prerequisites
+
+- Docker & Docker Compose v2 running
+- Node.js 20+ (for Playwright)
+- Chromium browser installed: `cd ui && npx playwright install chromium`
+
+### Quick Start
+
+```bash
+# Run the full E2E pipeline (start stack → seed → test → cleanup)
+make test-e2e
+```
+
+This single command:
+1. Starts the Docker Compose stack with a Mock AI Server (BYOK mode)
+2. Waits for all services to become healthy
+3. Seeds Kafka with 3 synthetic failure events (CrashLoopBackOff, OOMKilled, ImagePullBackOff)
+4. Waits for the ai-analyzer pipeline to process events (~15s)
+5. Runs Playwright tests against `http://localhost:3000`
+6. Cleans up all containers and volumes
+
+### Running Individual Tests
+
+```bash
+cd ui
+npx playwright test e2e/dashboard.spec.ts    # Dashboard cards
+npx playwright test e2e/navigation.spec.ts   # Sidebar navigation
+npx playwright test e2e/remediation.spec.ts  # Action buttons
+npx playwright test e2e/error-states.spec.ts # Error handling
+```
+
+### Viewing Reports
+
+After a test run, open the HTML report:
+
+```bash
+cd ui && npx playwright show-report
+```
+
+Reports are saved in `ui/playwright-report/` (gitignored).
+
+### E2E Infrastructure
+
+| File | Purpose |
+|------|---------|
+| `services/mock-ai-server/` | Zero-dependency Node.js server simulating an OpenAI-compatible AI endpoint |
+| `deployments/docker-compose.e2e.yaml` | Compose override adding mock-ai-server and configuring BYOK mode |
+| `scripts/seed-kafka-events.sh` | Publishes synthetic KubernetesEvent messages to Kafka |
+| `ui/playwright.config.ts` | Playwright configuration (headless Chromium, 30s timeout, retries) |
+| `ui/e2e/` | E2E test specs (dashboard, navigation, remediation, error states) |
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `E2E_WAIT` | `15` | Seconds to wait for pipeline processing after seeding |
+
+---
+
 ## Resiliency & Chaos Certification
 
 The platform implements defense-in-depth resilience validated against four controlled failure scenarios:
@@ -237,6 +300,7 @@ The `make init` target runs a comprehensive pre-flight script that:
 | `make test-ui` | Run UI typecheck + lint + tests + build |
 | `make build` | Build all containers without starting |
 | `make clean` | Remove containers, volumes, and build artifacts |
+| `make test-e2e` | Run full E2E pipeline (start stack → seed → Playwright → cleanup) |
 
 ### Service Endpoints (after `make init`)
 

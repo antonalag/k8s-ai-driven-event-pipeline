@@ -1,0 +1,43 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# E2E Testing Override — Mock AI Server + BYOK Configuration
+#
+# Usage: docker compose -f deployments/docker-compose.yaml -f deployments/docker-compose.e2e.yaml --env-file .env up --build -d
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  mock-ai-server:
+    build:
+      context: ../services/mock-ai-server
+      dockerfile: Dockerfile
+    container_name: mock-ai-server
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8090/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - platform-net
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: "1000:1000"
+
+  ai-analyzer:
+    environment:
+      PLATFORM_AI_PROVIDER: "byok"
+      BYOK_ENDPOINT: "http://mock-ai-server:8090"
+      BYOK_API_KEY: "e2e-test-key"
+      BYOK_MODEL: "mock-model"
+      BYOK_PROVIDER_TYPE: "OPENAI_COMPATIBLE"
+    depends_on:
+      mock-ai-server:
+        condition: service_healthy

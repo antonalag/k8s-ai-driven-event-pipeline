@@ -10,13 +10,33 @@ permissions:
   contents: read
 
 jobs:
-  backend-pipeline:
+  changes:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' || 
-      contains(github.event.head_commit.modified, 'services/') ||
-      contains(github.event.head_commit.modified, 'build.gradle') ||
-      contains(github.event.head_commit.modified, 'specs/')
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'services/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'specs/**'
+            frontend:
+              - 'ui/**'
+              - 'specs/**'
+
+  backend-pipeline:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || needs.changes.outputs.backend == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
@@ -41,26 +61,25 @@ jobs:
           scan-ref: '.'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
+
   frontend-pipeline:
+    needs: changes
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' ||
-      contains(github.event.head_commit.modified, 'ui/') ||
-      contains(github.event.head_commit.modified, 'specs/')
+    if: github.event_name == 'push' || needs.changes.outputs.frontend == 'true'
     defaults:
       run:
         working-directory: ./ui
     permissions:
-      contents: read      
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
-        
+
       - name: Setup Node.js Environment
         uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8  # v4.0.2
         with:
-          node-version: '20' 
-          cache: 'npm'       
+          node-version: '20'
+          cache: 'npm'
           cache-dependency-path: './ui/package-lock.json'
 
       - name: Install Dependencies
@@ -85,3 +104,52 @@ jobs:
           scan-ref: './ui'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
+
+  e2e-pipeline:
+    needs: [backend-pipeline, frontend-pipeline]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9  # v4.2.1
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8  # v4.0.2
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './ui/package-lock.json'
+
+      - name: Install Playwright browsers
+        working-directory: ./ui
+        run: npx playwright install --with-deps chromium
+
+      - name: Grant execute permission
+        run: chmod +x gradlew scripts/seed-kafka-events.sh
+
+      - name: Run E2E pipeline
+        run: make test-e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+        with:
+          name: playwright-report
+          path: ui/playwright-report/
+          retention-days: 7
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08  # v4.6.0
+        with:
+          name: test-results
+          path: ui/test-results/
+          retention-days: 7
