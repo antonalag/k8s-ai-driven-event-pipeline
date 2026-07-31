@@ -10,8 +10,6 @@ import com.platform.analyzer.domain.port.inbound.DismissAnalysisUseCase;
 import com.platform.analyzer.domain.port.outbound.LifecycleMessagingPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 
 /**
@@ -19,7 +17,6 @@ import java.time.LocalDateTime;
  * Coordinates lifecycle state transition, persistence, event publication,
  * and structured audit logging.
  */
-@Service
 public class DismissAnalysisService implements DismissAnalysisUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(DismissAnalysisService.class);
