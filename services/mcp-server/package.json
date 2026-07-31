@@ -1,6 +1,6 @@
 {
   "name": "@platform/mcp-server",
-  "version": "1.0.0",
+  "version": "0.1.0-beta.1",
   "type": "module",
   "description": "MCP Intelligence Layer — Kubernetes context server for AI-driven analysis",
   "main": "dist/index.js",

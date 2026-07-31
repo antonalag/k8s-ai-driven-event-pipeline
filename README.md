@@ -1,5 +1,7 @@
 # AI-Driven Kubernetes Troubleshooting Pipeline
 
+[![CI](https://github.com/antonalag/k8s-ai-driven-event-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/antonalag/k8s-ai-driven-event-pipeline/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Java 21](https://img.shields.io/badge/Java-21-orange.svg) ![Node 20](https://img.shields.io/badge/Node-20-green.svg) ![Spring Boot 3.5](https://img.shields.io/badge/Spring%20Boot-3.5-brightgreen.svg)
+
 Asynchronous root-cause analysis and 1-click remediation for Kubernetes cluster failures.
 Built with Spring Boot 3.5, Apache Kafka (KRaft), OpenSearch, and a Model Context Protocol (MCP) intelligence layer.
 

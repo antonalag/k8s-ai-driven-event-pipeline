@@ -4,6 +4,9 @@
 # Semantic review output (local analysis only)
 semantic-review/
 
+# Personal task explanations (not for repo)
+TASKS-EXPLANATION.md
+
 # ──────────────────────────────────────────
 # Secrets — local environment
 # ──────────────────────────────────────────
