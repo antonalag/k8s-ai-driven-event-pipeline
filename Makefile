@@ -73,7 +73,7 @@ test-e2e:
 	@sleep $(E2E_WAIT)
 	@echo ""
 	@echo "🎭 Running Playwright E2E tests..."
-	@cd ui && npx playwright test || (echo "❌ E2E tests failed" && docker compose $(E2E_COMPOSE) down -v --remove-orphans && exit 1)
+	@cd ui && npx playwright test || (echo "❌ E2E tests failed" && cd .. && docker compose $(E2E_COMPOSE) down -v --remove-orphans && exit 1)
 	@echo ""
 	@echo "🧹 Cleaning up Docker Compose stack..."
 	@docker compose $(E2E_COMPOSE) down -v --remove-orphans
