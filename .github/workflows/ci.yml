@@ -128,6 +128,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: './ui/package-lock.json'
 
+      - name: Install UI dependencies
+        working-directory: ./ui
+        run: npm ci
+
       - name: Install Playwright browsers
         working-directory: ./ui
         run: npx playwright install --with-deps chromium
